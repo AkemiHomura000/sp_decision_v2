@@ -53,6 +53,7 @@ namespace tools
             std::string log = message.str();
             file_logger_->error(log);
         }
+        typedef std::shared_ptr<logger> Ptr;
     private:
         std::shared_ptr<spdlog::logger> file_logger_;
     };

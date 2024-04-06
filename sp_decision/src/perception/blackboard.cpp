@@ -2,8 +2,9 @@
 
 namespace sp_decision
 {
-    Blackboard::Blackboard()
+    Blackboard::Blackboard(const tools::logger::Ptr &logger_ptr)
     {
+        logger_ptr_ = logger_ptr; // 获取日志器
         robot_init();
         referee_info_sub_ =
             nh_.subscribe("referee_info", 1, &Blackboard::referee_info_callback, this);
@@ -17,11 +18,6 @@ namespace sp_decision
             nh_.advertise<robot_msg::EnemyStage>("/enemy_stage", 1);
         log_pub_ =
             nh_.advertise<robot_msg::EnemyStage>("/sentry/log", 1);
-        for (int i = 0; i < 3; i++)
-        {
-            ros::Time time;
-            enemy_revive_time.push_back(time);
-        }
     }
 
     // void Blackboard::GoalStatusCallback(const actionlib_msgs::GoalStatusArray::ConstPtr &msg)
@@ -139,7 +135,7 @@ namespace sp_decision
         int num = std::stoi(msg->number);
         Blackboard::enemy_status[num - 1].robot_pos(0) = msg->pose.position.x;
         Blackboard::enemy_status[num - 1].robot_pos(1) = msg->pose.position.y;
-        enemy_status[num - 1].pos_update_time=ros::Time::now();
+        enemy_status[num - 1].pos_update_time = ros::Time::now();
         enemy_status_cbk_mutex.unlock();
     }
     // void Blackboard::CmdVelDataCallback(const geometry_msgs::Twist &msg)
@@ -254,14 +250,6 @@ namespace sp_decision
         std::string binary_string = ss.str();
         enemy__.ss = binary_string;
         enemy_status_pub_.publish(enemy__);
+        logger_ptr_->logInfo(ss);
     }
-    // void Blackboard::LogPub(std::string str)
-    // {
-    //     robot_msg::Log log; // 记录日志
-    //     std::stringstream ss;
-    //     ss << str;
-    //     std::string binary_string = ss.str();
-    //     log.ss = binary_string;
-    //     log_pub_.publish(log);
-    // }
 } // namespace sp_decision

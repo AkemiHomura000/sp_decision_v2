@@ -42,6 +42,7 @@ include_directories(
 add_executable(${PROJECT_NAME}
 src/main.cpp
 src/perception/blackboard.cpp
+src/executor/chassis.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

@@ -25,13 +25,15 @@
 #include <robot_msg/EnemyStage.h>
 #include <robot_msg/RefereeInfoMsg.h>
 #include <robot_msg/Armor.h>
+
+#include <tools/log.hpp>
 namespace sp_decision
 {
     class Blackboard
     {
     public:
         typedef std::shared_ptr<Blackboard> Ptr;
-        Blackboard();
+        Blackboard(const tools::logger::Ptr &logger_ptr);
         ~Blackboard() {}
         std::mutex match_status_cbk_mutex;
         std::mutex sentry_status_cbk_mutex;
@@ -152,11 +154,13 @@ namespace sp_decision
         void LogPub(std::string str);
 
     private:
+        tools::logger::Ptr logger_ptr_;
+        
         ros::NodeHandle nh_;
         ros::Subscriber referee_info_sub_;
         ros::Subscriber enemy_hp_sub_;
         ros::Subscriber sentry_odom_sub_;
-        ros::Subscriber enemy_pos_sub_;//接收敌方坐标
+        ros::Subscriber enemy_pos_sub_; // 接收敌方坐标
         ros::Publisher enemy_status_pub_;
 
         ros::Subscriber referee_data_sub_;

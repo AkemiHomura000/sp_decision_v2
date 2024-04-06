@@ -24,6 +24,8 @@ ROS    >= Melodic. [ROS Installation](http://wiki.ros.org/ROS/Installation)
 运行relocalization相关功能需要
 `pip install open3d==0.10.0.0 `
 
+### 1.3. **spdlog**
+直接sudo apt install install libspdlog-dev即可
 ## 2. Build
 ```
     cd ~/$A_ROS_DIR$/src

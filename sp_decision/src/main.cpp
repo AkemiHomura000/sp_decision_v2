@@ -2,18 +2,14 @@
 #include "ros/ros.h"
 #include "perception/blackboard.hpp"
 #include "tools/log.hpp"
+#include "executor/chassis.hpp"
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "sp_decision_node");
-    tools::logger log;
-    for (int i = 0; i < 100; i++)
-    {
-        std::stringstream ss;
-        ss << "hello " << i;
-        log.logDebug(ss);
-        log.logError(ss);
-    }
-    sp_decision::Blackboard blackboard;
+    tools::logger::Ptr logger= std::make_shared<tools::logger>();
+    sp_decision::Blackboard blackboard(logger);
+    sp_decision::ChassisExecutor chassis(logger);
+    chassis.sendGoal(1,1);
     ros::spin();
     return 0;
 }
