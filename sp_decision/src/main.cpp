@@ -5,11 +5,11 @@
 #include "executor/chassis.hpp"
 int main(int argc, char **argv)
 {
+    setlocale(LC_CTYPE, "zh_CN.utf8");
     ros::init(argc, argv, "sp_decision_node");
     tools::logger::Ptr logger= std::make_shared<tools::logger>();
     sp_decision::Blackboard blackboard(logger);
     sp_decision::ChassisExecutor chassis(logger);
-    chassis.sendGoal(1,1);
     ros::spin();
     return 0;
 }
