@@ -22,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
 )
 find_package(Eigen3 REQUIRED)
-
+find_package(yaml-cpp REQUIRED)
 
 include_directories(${EIGEN3_INCLUDE_DIR})
 catkin_package(
@@ -43,8 +43,17 @@ add_executable(${PROJECT_NAME}
 src/main.cpp
 src/perception/blackboard.cpp
 src/executor/chassis.cpp
+src/decision_node/decision_tree.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  yaml-cpp
 )
 
+# add_executable(yaml_test
+# src/decision_node/yaml_read.cpp
+# )
+# target_link_libraries(yaml_test 
+# ${catkin_LIBRARIES}
+# yaml-cpp
+# )

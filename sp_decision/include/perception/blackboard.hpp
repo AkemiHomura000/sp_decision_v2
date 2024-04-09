@@ -97,6 +97,7 @@ namespace sp_decision
         {
             int sentry_hp;                 // 机器人血量
             nav_msgs::Odometry robot_pose; // 机器人位置
+            Eigen::Vector2d robot_pos;     // 机器人位置
         };
         sentry_status sentry_status;
         //--------------------------------------------------------------------------------------------------------------------------------//
@@ -155,7 +156,7 @@ namespace sp_decision
 
     private:
         tools::logger::Ptr logger_ptr_;
-        
+
         ros::NodeHandle nh_;
         ros::Subscriber referee_info_sub_;
         ros::Subscriber enemy_hp_sub_;

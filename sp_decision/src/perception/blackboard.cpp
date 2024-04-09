@@ -126,6 +126,8 @@ namespace sp_decision
     {
         sentry_status_cbk_mutex.lock();
         Blackboard::sentry_status.robot_pose = *msg;
+        Blackboard::sentry_status.robot_pos(0) = msg->pose.pose.position.x;
+        Blackboard::sentry_status.robot_pos(1) = msg->pose.pose.position.y;
         sentry_status_cbk_mutex.unlock();
     }
 

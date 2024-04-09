@@ -1,0 +1,42 @@
+decision_tree_1:
+  - id: 1
+    variable: "a"
+    condition: "> 1"
+    left_id: 2
+    right_id: 3
+    action: "stay"
+
+  - id: 2 
+    variable: "b"
+    condition: "> 1"
+    left_id: 4
+    right_id: -1
+    action: ""
+
+  - id: 3 
+    variable: "c"
+    condition: "== 1"
+    left_id: 4
+    right_id: -1
+    action: ""
+
+  - id: 4 
+    variable: "a"
+    condition: "> 10"
+    left_id: -1
+    right_id: 5
+    action: ""
+
+  - id: 5 
+    variable: "b"
+    condition: "== 1"
+    left_id: -1
+    right_id: 6
+    action: ""
+
+  - id: 6 
+    variable: "c"
+    condition: "> -1"
+    left_id: -1
+    right_id: -1
+    action: "stay"
