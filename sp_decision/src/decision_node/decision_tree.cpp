@@ -121,9 +121,9 @@ namespace sp_decision
                     {
                         dt_node.variable_ptr = &blackboard_ptr_->match_progress;
                     }
-                    if (variable == "match_reaminder")
+                    if (variable == "match_remainder")
                     {
-                        dt_node.variable_ptr = &blackboard_ptr_->match_reaminder;
+                        dt_node.variable_ptr = &blackboard_ptr_->match_remainder;
                     }
                     if (variable == "enemy_hp[0]")
                     {
@@ -180,7 +180,7 @@ namespace sp_decision
             if (node->left->id != 1)
             {
                 std::cout << "judge_true\t" << node->id << std::endl;
-                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
+                // std::cout << "variable\t" << *node->variable_ptr << std::endl;
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 return judge(node->left);
@@ -191,7 +191,7 @@ namespace sp_decision
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 std::cout << "judge_true\t" << node->id << std::endl;
-                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
+                // std::cout << "variable\t" << *node->variable_ptr << std::endl;
             }
         }
         else
@@ -199,7 +199,7 @@ namespace sp_decision
             if (node->right->id != 1)
             {
                 std::cout << "judge_false\t" << node->id << std::endl;
-                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
+                // std::cout << "variable\t" << *node->variable_ptr << std::endl;
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 return judge(node->right);
@@ -210,7 +210,7 @@ namespace sp_decision
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 std::cout << "judge_true\t" << node->id << std::endl;
-                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
+                // std::cout << "variable\t" << *node->variable_ptr << std::endl;
             }
         }
     }

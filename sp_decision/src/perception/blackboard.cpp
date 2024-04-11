@@ -41,7 +41,7 @@ namespace sp_decision
         // 更新消息
         sp_decision::Blackboard::match_status.game_progress = msg->game_progress;
         sp_decision::Blackboard::match_status.stage_remain_time = msg->stage_remain_time;
-        match_reaminder = static_cast<double>(sp_decision::Blackboard::match_status.stage_remain_time);
+        match_remainder = static_cast<double>(sp_decision::Blackboard::match_status.stage_remain_time);
         sp_decision::Blackboard::match_status.rfid_remedy_state = msg->rfid_remedy_state;
         sp_decision::Blackboard::match_status.rfid_centerpoint_state = msg->rfid_centerpoint_state;
         // 判断比赛进程

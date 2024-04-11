@@ -41,7 +41,7 @@ namespace sp_decision
          */
         double enemy_hp[8] = {};     // 敌方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
         double friend_hp[8] = {};    // 友方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
-        double match_reaminder = -1; // 比赛剩余时间
+        double match_remainder = -1; // 比赛剩余时间
         double match_progress = 0;   // 比赛进程,0为准备，1为进行中，2为结束
 
         std::mutex match_status_cbk_mutex;
