@@ -1,42 +1,49 @@
 decision_tree_1:
   - id: 1
-    variable: "a"
-    condition: "> 1"
+    variable: "match_progress"
+    condition: "== 1"
     left_id: 2
     right_id: 3
-    action: "stay"
+    action: ""
 
   - id: 2 
-    variable: "b"
-    condition: "> 1"
+    variable: "match_reaminder"
+    condition: "> 300"
     left_id: 4
-    right_id: -1
-    action: ""
-
-  - id: 3 
-    variable: "c"
-    condition: "== 1"
-    left_id: 4
-    right_id: -1
-    action: ""
-
-  - id: 4 
-    variable: "a"
-    condition: "> 10"
-    left_id: -1
     right_id: 5
     action: ""
 
-  - id: 5 
-    variable: "b"
-    condition: "== 1"
-    left_id: -1
-    right_id: 6
-    action: ""
-
-  - id: 6 
-    variable: "c"
-    condition: "> -1"
+  - id: 3 
+    variable: "null"
+    condition: ""
     left_id: -1
     right_id: -1
     action: "stay"
+
+  - id: 4 
+    variable: "enemy_hp[0]"
+    condition: "> 100"
+    left_id: 6
+    right_id: 7
+    action: ""
+
+  - id: 5 
+    variable: "null"
+    condition: ""
+    left_id: -1
+    right_id: -1
+    action: "1"
+
+  - id: 6 
+    variable: "null"
+    condition: ""
+    left_id: -1
+    right_id: -1
+    action: "2"
+
+  - id: 7 
+    variable: "null"
+    condition: ""
+    left_id: -1
+    right_id: -1
+    action: "3"

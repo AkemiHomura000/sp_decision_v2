@@ -1,7 +1,11 @@
 #include "decision_node/decision_tree.hpp"
 namespace sp_decision
 {
-    
+    // 判定函数0：返回true，确保动作节点下一个一定是左节点
+    bool compare_0(double a, double b)
+    {
+        return true;
+    }
     // 判定函数1：决策变量>条件量
     bool compare_1(double a, double b)
     {
@@ -25,9 +29,8 @@ namespace sp_decision
     void decision_tree::sighandler(int signum)
     {
         printf("用户退出...\n");
-        exit(1);
     }
-    decision_tree::decision_tree(const tools::yaml_reader::Ptr &yaml_ptr)
+    decision_tree::decision_tree(const tools::yaml_reader::Ptr &yaml_ptr, const sp_decision::Blackboard::Ptr &blackboard_ptr)
     {
         decision_pub =
             nh_.advertise<robot_msg::EnemyStage>("/sentry/decision", 1);
@@ -36,8 +39,18 @@ namespace sp_decision
         b = 3;
         c = 0;
         num = 0;
-        yaml_reader_ptr = yaml_ptr;
+        yaml_reader_ptr_ = yaml_ptr;
+        blackboard_ptr_ = blackboard_ptr;
         node_ptr_init(); // 生成决策图
+    }
+    decision_tree::~decision_tree()
+    {
+        if (decision_thread_.joinable())
+        {
+            decision_thread_running_ = false;
+            decision_thread_.join();
+        }
+        // delete root_node_;
     }
     void decision_tree::print_tree()
     {
@@ -54,9 +67,9 @@ namespace sp_decision
     }
     void decision_tree::node_ptr_init()
     {
-        if (yaml_reader_ptr->readYAML())
+        if (yaml_reader_ptr_->readYAML())
         {
-            YAML::Node config = yaml_reader_ptr->getConfig();
+            YAML::Node config = yaml_reader_ptr_->getConfig();
             for (const auto &node : config["decision_tree_1"])
             {
                 tree_node dt_node;
@@ -68,60 +81,83 @@ namespace sp_decision
                 std::string variable = node["variable"].as<std::string>();
                 std::string condition = node["condition"].as<std::string>();
                 std::string action = node["action"].as<std::string>();
-                if (action != "")
+                if (action != "") // 动作节点
                 {
-                    dt_node.decision_pub=&decision_pub;
+                    dt_node.decision_pub = &decision_pub;
                     dt_node.decision_msg.decision = action;
+                    dt_node.compare_function = compare_0;
+                    dt_node.variable_ptr = &blackboard_ptr_->match_progress;
+                    dt_node.condition_value = 0;
                 }
-                size_t pos = 0;
-                while (pos < condition.size() && condition[pos] == ' ')
-                    ++pos;
-                // 获取符号
-                while (pos < condition.size() && !isdigit(condition[pos]) && condition[pos] != ' ')
-                    symbol += condition[pos++];
-                if (symbol == ">")
+                else // 判断节点
                 {
-                    dt_node.compare_function = compare_1;
+                    size_t pos = 0;
+                    while (pos < condition.size() && condition[pos] == ' ')
+                        ++pos;
+                    // 获取符号
+                    while (pos < condition.size() && !isdigit(condition[pos]) && condition[pos] != ' ')
+                        symbol += condition[pos++];
+                    if (symbol == ">")
+                    {
+                        dt_node.compare_function = compare_1;
+                    }
+                    if (symbol == "<")
+                    {
+                        dt_node.compare_function = compare_2;
+                    }
+                    if (symbol == "==")
+                    {
+                        dt_node.compare_function = compare_3;
+                    }
+                    if (symbol == "!=")
+                    {
+                        dt_node.compare_function = compare_4;
+                    }
+                    // 获取数字部分
+                    value = std::stod(condition.substr(pos));
+                    dt_node.condition_value = value;
+                    // 获取变量名
+                    if (variable == "match_progress")
+                    {
+                        dt_node.variable_ptr = &blackboard_ptr_->match_progress;
+                    }
+                    if (variable == "match_reaminder")
+                    {
+                        dt_node.variable_ptr = &blackboard_ptr_->match_reaminder;
+                    }
+                    if (variable == "enemy_hp[0]")
+                    {
+                        dt_node.variable_ptr = &blackboard_ptr_->enemy_hp[0];
+                    }
                 }
-                if (symbol == "<")
-                {
-                    dt_node.compare_function = compare_2;
-                }
-                if (symbol == "==")
-                {
-                    dt_node.compare_function = compare_3;
-                }
-                if (symbol == "!=")
-                {
-                    dt_node.compare_function = compare_4;
-                }
-                // 获取数字部分
-                value = std::stod(condition.substr(pos));
-                dt_node.condition_value = value;
-                // 获取变量名
-                if (variable == "a")
-                {
-                    dt_node.variable_ptr = &a;
-                }
-                if (variable == "b")
-                {
-                    dt_node.variable_ptr = &b;
-                }
-                if (variable == "c")
-                {
-                    dt_node.variable_ptr = &c;
-                }
+                nodes_id_vector.push_back(dt_node.id);
                 nodes_vector.push_back(dt_node);
             }
-            // 打印解析后的数据
+            // 连接节点
             for (auto &node : nodes_vector)
             {
                 if (node.left_id != -1)
-                    node.left = &nodes_vector[node.left_id - 1];
+                {
+                    int m = 0;
+                    for (m; m < nodes_id_vector.size(); m++)
+                    {
+                        if (nodes_id_vector[m] == node.left_id)
+                            break;
+                    }
+                    node.left = &nodes_vector[m];
+                }
                 else
                     node.left = &nodes_vector[0];
                 if (node.right_id != -1)
-                    node.right = &nodes_vector[node.right_id - 1];
+                {
+                    int m = 0;
+                    for (m; m < nodes_id_vector.size(); m++)
+                    {
+                        if (nodes_id_vector[m] == node.right_id)
+                            break;
+                    }
+                    node.right = &nodes_vector[m];
+                }
                 else
                     node.right = &nodes_vector[0];
             }
@@ -129,10 +165,9 @@ namespace sp_decision
     }
     tree_node *decision_tree::judge(tree_node *node)
     {
-
         if (node->id == 1)
         {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50)); // 间隔50ms
             num++;
             std::cout << "num:" << num << std::endl;
             auto now = std::chrono::system_clock::now();
@@ -145,6 +180,7 @@ namespace sp_decision
             if (node->left->id != 1)
             {
                 std::cout << "judge_true\t" << node->id << std::endl;
+                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 return judge(node->left);
@@ -155,6 +191,7 @@ namespace sp_decision
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 std::cout << "judge_true\t" << node->id << std::endl;
+                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
             }
         }
         else
@@ -162,6 +199,7 @@ namespace sp_decision
             if (node->right->id != 1)
             {
                 std::cout << "judge_false\t" << node->id << std::endl;
+                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 return judge(node->right);
@@ -172,15 +210,21 @@ namespace sp_decision
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
                 std::cout << "judge_true\t" << node->id << std::endl;
+                //std::cout << "variable\t" << *node->variable_ptr << std::endl;
             }
         }
     }
     void decision_tree::run()
     {
-        signal(SIGINT, sighandler);
-        while (ros::ok)
+        // signal(SIGINT, sighandler);//强制退出程序
+        while (decision_thread_running_)
         {
             judge(&nodes_vector[0]);
         }
+    }
+    void decision_tree::run_start()
+    {
+        decision_thread_running_ = true;
+        decision_thread_ = std::thread(&decision_tree::run, this);
     }
 }

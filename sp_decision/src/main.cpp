@@ -11,11 +11,12 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "sp_decision_node");
     tools::logger::Ptr logger = std::make_shared<tools::logger>();
     tools::yaml_reader::Ptr yaml_read = std::make_shared<tools::yaml_reader>("/home/lp1/sp_nav_ws/src/sp_nav/sp_decision/config/test.yaml");
-    sp_decision::decision_tree decison_tree_0(yaml_read);
+    sp_decision::Blackboard::Ptr blackboard=std::make_shared<sp_decision::Blackboard>(logger);
+    sp_decision::decision_tree decison_tree_0(yaml_read, blackboard);
     decison_tree_0.print_tree();
 
-    decison_tree_0.run();
-    // sp_decision::Blackboard blackboard(logger);
+    decison_tree_0.run_start();
+
     // sp_decision::ChassisExecutor chassis(logger);
     ros::spin();
     return 0;

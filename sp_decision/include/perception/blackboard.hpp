@@ -35,6 +35,15 @@ namespace sp_decision
         typedef std::shared_ptr<Blackboard> Ptr;
         Blackboard(const tools::logger::Ptr &logger_ptr);
         ~Blackboard() {}
+        /**
+         * @brief 提供给decision_node的接口
+         * @todo 优化结构，整理冗余
+         */
+        double enemy_hp[8] = {};     // 敌方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
+        double friend_hp[8] = {};    // 友方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
+        double match_reaminder = -1; // 比赛剩余时间
+        double match_progress = 0;   // 比赛进程,0为准备，1为进行中，2为结束
+
         std::mutex match_status_cbk_mutex;
         std::mutex sentry_status_cbk_mutex;
         std::mutex referee_data_cbk_mutex;
@@ -43,7 +52,6 @@ namespace sp_decision
         std::mutex goal_status_mutex;
         std::mutex referee_info_mutex;
         std::mutex enemy_status_cbk_mutex;
-        void ResetFlag();
 
         // 云台手发布坐标
         struct Point

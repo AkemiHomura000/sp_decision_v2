@@ -49,7 +49,7 @@ namespace sp_decision
         int right_id;
         double condition_value;              // 条件量
         robot_msg::DecisionMsg decision_msg; // 决策信息
-        ros::Publisher *decision_pub;  // 发布决策消息
+        ros::Publisher *decision_pub;        // 发布决策消息
         tree_node() : variable_ptr(nullptr), compare_function(nullptr), left(nullptr), right(nullptr) {}
         tree_node(double *x, CompareFunction func) : variable_ptr(x), compare_function(func), left(nullptr), right(nullptr) {}
         bool compare(double a, double b)
@@ -74,20 +74,24 @@ namespace sp_decision
         double b;
         double c;
         int num;
-
         static void sighandler(int signum); // 设置退出函数
-        decision_tree(const tools::yaml_reader::Ptr &yaml_ptr);
-        void node_ptr_init();                // 生成决策图
-        tree_node *judge(tree_node *node);   // 执行判断
-        void run();                          // 循环
-        void print_tree();                   // 打印节点信息
+        decision_tree(const tools::yaml_reader::Ptr &yaml_ptr, const sp_decision::Blackboard::Ptr &blackboard_ptr);
+        ~decision_tree();
+        void node_ptr_init();              // 生成决策图
+        tree_node *judge(tree_node *node); // 执行判断
+        void run();                        // 循环
+        void print_tree();                 // 打印节点信息
+        void run_start();
         std::vector<tree_node> nodes_vector; // 节点表
+        std::vector<int> nodes_id_vector;    // 节点id表
         ros::Publisher decision_pub;
 
     private:
         ros::NodeHandle nh_;
-
-        tools::yaml_reader::Ptr yaml_reader_ptr;
+        std::thread decision_thread_;
+        bool decision_thread_running_;
+        sp_decision::Blackboard::Ptr blackboard_ptr_;
+        tools::yaml_reader::Ptr yaml_reader_ptr_;
     };
 }
 #endif
