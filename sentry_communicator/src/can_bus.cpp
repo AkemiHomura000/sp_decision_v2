@@ -11,7 +11,8 @@ namespace sentry_communicator
         : bus_name_(bus_name)
     {
         referee_info_pub_ = root_nh.advertise<robot_msg::RefereeInfoMsg>("referee_info",1000);
-        robot_HP_pub_ = root_nh.advertise<robot_msg::RobotHP>("Enemy_robot_HP",1000);
+        robot_EnemyHP_pub_ = root_nh.advertise<robot_msg::RobotHP>("Enemy_robot_HP",1000);
+        robot_TeamHP_pub_ = root_nh.advertise<robot_msg::RobotHP>("Team_robot_HP",1000);
 
         while (!socket_can_.open(bus_name, boost::bind(&CanBus::frameCallback, this, _1), thread_priority) && ros::ok())
             ros::Duration(.5).sleep();
@@ -86,58 +87,108 @@ namespace sentry_communicator
     void CanBus::frameCallback(const can_frame &frame)
     {
         std::lock_guard<std::mutex> guard(mutex_);
-        if (frame.can_id == 0x18D)
+        if (frame.can_id == 0x18A)
         {
-            robot_HP_msg_.Hero_HP = 
+            robot_TeamHP_msg_.Hero_HP = 
                 (uint16_t)((frame.data[0] << 8u) | frame.data[1]);
-            robot_HP_msg_.Engineer_HP = 
+            robot_TeamHP_msg_.Engineer_HP = 
                 (uint16_t)((frame.data[2] << 8u) | frame.data[3]);
-            robot_HP_msg_.Infantry_3_HP =
+            robot_TeamHP_msg_.Infantry_3_HP =
                 (uint16_t)((frame.data[4] << 8u) | frame.data[5]);
-            robot_HP_msg_.Infantry_4_HP =
+            robot_TeamHP_msg_.Infantry_4_HP =
                 (uint16_t)((frame.data[6] << 8u) | frame.data[7]);
-            if (lower_data_updated_ == true && upper_data_updated_ == false)
+            if (lower_Teamdata_updated_ == true && upper_Teamdata_updated_ == false)
             {
                 // 发布数据
-                robot_HP_pub_.publish(robot_HP_msg_);
+                robot_TeamHP_pub_.publish(robot_TeamHP_msg_);
+                lower_Teamdata_updated_ = false;
+                upper_Teamdata_updated_ = false;
             }
             else 
             {
-                upper_data_updated_ = true;
+                upper_Teamdata_updated_ = true;
             }
         }
 
-        if (frame.can_id == 0x18E)
+        if (frame.can_id == 0x18B)
         {
-            robot_HP_msg_.Infantry_5_HP = 
+            robot_TeamHP_msg_.Infantry_5_HP = 
                 (uint16_t)((frame.data[0] << 8u) | frame.data[1]);
-            robot_HP_msg_.Sentry_HP = 
+            robot_TeamHP_msg_.Sentry_HP = 
                 (uint16_t)((frame.data[2] << 8u) | frame.data[3]);
-            robot_HP_msg_.OutPose_HP =
+            robot_TeamHP_msg_.OutPose_HP =
                 (uint16_t)((frame.data[4] << 8u) | frame.data[5]);
-            robot_HP_msg_.Base_HP =
+            robot_TeamHP_msg_.Base_HP =
                 (uint16_t)((frame.data[6] << 8u) | frame.data[7]);
-            if (upper_data_updated_ == true && lower_data_updated_ == false)
+            if (upper_Teamdata_updated_ == true && lower_Teamdata_updated_ == false)
             {
                 // 发布数据
-                robot_HP_pub_.publish(robot_HP_msg_);
+                robot_TeamHP_pub_.publish(robot_TeamHP_msg_);
+                lower_Teamdata_updated_ = false;
+                upper_Teamdata_updated_ = false;
             }
             else 
             {
-                lower_data_updated_ = true;
+                lower_Teamdata_updated_ = true;
+            }
+        }
+        if (frame.can_id == 0x18C)
+        {
+            robot_EnemyHP_msg_.Hero_HP = 
+                (uint16_t)((frame.data[0] << 8u) | frame.data[1]);
+            robot_EnemyHP_msg_.Engineer_HP = 
+                (uint16_t)((frame.data[2] << 8u) | frame.data[3]);
+            robot_EnemyHP_msg_.Infantry_3_HP =
+                (uint16_t)((frame.data[4] << 8u) | frame.data[5]);
+            robot_EnemyHP_msg_.Infantry_4_HP =
+                (uint16_t)((frame.data[6] << 8u) | frame.data[7]);
+            if (lower_Enemydata_updated_ == true && upper_Enemydata_updated_ == false)
+            {
+                // 发布数据
+                robot_EnemyHP_pub_.publish(robot_EnemyHP_msg_);
+                lower_Enemydata_updated_ = false;
+                upper_Enemydata_updated_ = false;
+            }
+            else 
+            {
+                upper_Enemydata_updated_ = true;
+            }
+        }
+
+        if (frame.can_id == 0x18D)
+        {
+            robot_EnemyHP_msg_.Infantry_5_HP = 
+                (uint16_t)((frame.data[0] << 8u) | frame.data[1]);
+            robot_EnemyHP_msg_.Sentry_HP = 
+                (uint16_t)((frame.data[2] << 8u) | frame.data[3]);
+            robot_EnemyHP_msg_.OutPose_HP =
+                (uint16_t)((frame.data[4] << 8u) | frame.data[5]);
+            robot_EnemyHP_msg_.Base_HP =
+                (uint16_t)((frame.data[6] << 8u) | frame.data[7]);
+            if (upper_Enemydata_updated_ == true && lower_Enemydata_updated_ == false)
+            {
+                // 发布数据
+                robot_EnemyHP_pub_.publish(robot_EnemyHP_msg_);
+                lower_Enemydata_updated_ = false;
+                upper_Enemydata_updated_ = false;
+            }
+            else 
+            {
+                lower_Enemydata_updated_ = true;
             }
         }
         
         if(frame.can_id == 0x18F){
 
-            referee_info_msg_.base_HP = (uint16_t)((frame.data[0] << 8u) | frame.data[1]);
-            referee_info_msg_.robot_HP = (uint16_t)((frame.data[2] << 8u) | frame.data[3]);
-            referee_info_msg_.game_progress = frame.data[4];
-            referee_info_msg_.stage_remain_time = (uint16_t)((frame.data[5] << 8u) | frame.data[6]);
-            // front 4 bits
-            referee_info_msg_.rfid_remedy_state = (uint16_t)((frame.data[7] & 0xF0u) >> 4u);
-            // later 4 bits
-            referee_info_msg_.rfid_centerpoint_state = (uint16_t)(frame.data[7] & 0x0Fu);
+            referee_info_msg_.game_progress = frame.data[0];
+            referee_info_msg_.stage_remain_time = (uint16_t)((frame.data[1] << 8u) | frame.data[2]);
+            
+            data = (frame.data[3] << 8u) | frame.data[4];
+            referee_info_msg_.target_x = uint2float(data, -30, 30, 16);
+            data = (frame.data[5] << 8u) | frame.data[6];
+            referee_info_msg_.target_y = uint2float(data, -30, 30, 16);
+
+            referee_info_msg_.key = (char)frame.data[7];
 
             referee_info_pub_.publish(referee_info_msg_);
 
