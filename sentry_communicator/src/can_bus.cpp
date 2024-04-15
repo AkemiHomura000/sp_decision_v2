@@ -4,6 +4,8 @@
 #define MAX_ANGLE 180.f
 #define MIN_ANGLE -180.f
 
+#define DEBUG // 调试时打开,防止和虚拟裁判系统冲突
+
 namespace sentry_communicator
 {
 
@@ -100,7 +102,9 @@ namespace sentry_communicator
             if (lower_Teamdata_updated_ == true && upper_Teamdata_updated_ == false)
             {
                 // 发布数据
+#ifndef DEBUG
                 robot_TeamHP_pub_.publish(robot_TeamHP_msg_);
+#endif 
                 lower_Teamdata_updated_ = false;
                 upper_Teamdata_updated_ = false;
             }
@@ -123,7 +127,9 @@ namespace sentry_communicator
             if (upper_Teamdata_updated_ == true && lower_Teamdata_updated_ == false)
             {
                 // 发布数据
+#ifndef DEBUG
                 robot_TeamHP_pub_.publish(robot_TeamHP_msg_);
+#endif 
                 lower_Teamdata_updated_ = false;
                 upper_Teamdata_updated_ = false;
             }
@@ -145,7 +151,9 @@ namespace sentry_communicator
             if (lower_Enemydata_updated_ == true && upper_Enemydata_updated_ == false)
             {
                 // 发布数据
+#ifndef DEBUG
                 robot_EnemyHP_pub_.publish(robot_EnemyHP_msg_);
+#endif 
                 lower_Enemydata_updated_ = false;
                 upper_Enemydata_updated_ = false;
             }
@@ -168,7 +176,9 @@ namespace sentry_communicator
             if (upper_Enemydata_updated_ == true && lower_Enemydata_updated_ == false)
             {
                 // 发布数据
+#ifndef DEBUG
                 robot_EnemyHP_pub_.publish(robot_EnemyHP_msg_);
+#endif 
                 lower_Enemydata_updated_ = false;
                 upper_Enemydata_updated_ = false;
             }
@@ -189,9 +199,9 @@ namespace sentry_communicator
             referee_info_msg_.target_y = uint2float(data, -30, 30, 16);
 
             referee_info_msg_.key = (char)frame.data[7];
-
+#ifndef DEBUG
             referee_info_pub_.publish(referee_info_msg_);
-
+#endif 
             // Robot_ID = frame.data[0];
             // Keyboard = frame.data[1];
             // data = (frame.data[2] << 8u) | frame.data[3];

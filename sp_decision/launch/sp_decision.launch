@@ -1,0 +1,4 @@
+<launch>
+  <node name="sp_decision" pkg="sp_decision" type="sp_decision" output="screen">
+  </node>
+</launch>

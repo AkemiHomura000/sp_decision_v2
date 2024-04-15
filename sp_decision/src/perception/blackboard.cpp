@@ -10,6 +10,8 @@ namespace sp_decision
             nh_.subscribe("/referee_info", 1, &Blackboard::referee_info_callback, this);
         enemy_hp_sub_ =
             nh_.subscribe("/Enemy_robot_HP", 10, &Blackboard::enemy_hp_callback, this);
+        team_hp_sub_ =
+            nh_.subscribe("/Team_robot_HP", 10, &Blackboard::team_hp_callback, this);
         sentry_odom_sub_ =
             nh_.subscribe("localization", 1, &Blackboard::sentry_pose_callback, this);
         enemy_pos_sub_ =
@@ -42,8 +44,6 @@ namespace sp_decision
         sp_decision::Blackboard::match_status.game_progress = msg->game_progress;
         sp_decision::Blackboard::match_status.stage_remain_time = msg->stage_remain_time;
         match_remainder = static_cast<double>(sp_decision::Blackboard::match_status.stage_remain_time);
-        // sp_decision::Blackboard::match_status.rfid_remedy_state = msg->rfid_remedy_state;
-        // sp_decision::Blackboard::match_status.rfid_centerpoint_state = msg->rfid_centerpoint_state;
         // 判断比赛进程
         if (match_status.game_progress < 4)
         {
@@ -60,6 +60,26 @@ namespace sp_decision
             game_status = MatchSatuts::AT_MATCH;
             match_progress = 1;
         }
+        //检测云台手标点和key，会持续修改1s，防止没检测到
+        if (msg->target_x != 0 || msg->target_y != 0 || msg->key != 0) 
+            time_received_target_ = ros::Time::now();
+        if ((time_received_target_.sec - ros::Time::now().sec) < 1)
+        {
+            if (msg->target_x != 0 || msg->target_y != 0 || msg->key != 0)
+            {
+                target[0] = msg->target_x;
+                target[1] = msg->target_y;
+                key_from_char = msg->key;
+                
+            }
+        }
+        else
+        {
+            target[0] = 0;
+            target[1] = 0;
+            key_from_char = 0;
+        }
+        //spdlog::info("target_x:{} \ttarget_y:{} \tkey:{} ", target[0], target[1], key_from_char);
 
         // // 更新基地受击状态?
         // if (base_HP_ > msg->base_HP || base_attacked_)
@@ -120,7 +140,7 @@ namespace sp_decision
             status.robot_status = sp_decision::Blackboard::ROBOT_STATUS::live;
             status.robot_pos(0) = 0;
             status.robot_pos(1) = 0;
-            sp_decision::Blackboard::teammate_status.push_back(status);
+            sp_decision::Blackboard::team_status.push_back(status);
         }
         for (int i = 0; i < 8; i++)
         {
@@ -159,25 +179,46 @@ namespace sp_decision
     //     vel_msg_sub_.angular.z = msg.angular.z;
     //     nav_cmd_vel_cbk_mutex.unlock();
     // }
+    void Blackboard::team_hp_callback(const robot_msg::RobotHP::ConstPtr &msg)
+    {
+        team_status_cbk_mutex.lock();
+        team_status[0].robot_hp = msg->Hero_HP;
+        team_hp[0] = static_cast<double>(msg->Hero_HP);
+        team_status[1].robot_hp = msg->Engineer_HP;
+        team_hp[1] = static_cast<double>(msg->Engineer_HP);
+        team_status[2].robot_hp = msg->Infantry_3_HP;
+        team_hp[2] = static_cast<double>(msg->Infantry_3_HP);
+        team_status[3].robot_hp = msg->Infantry_4_HP;
+        team_hp[3] = static_cast<double>(msg->Infantry_4_HP);
+        team_status[4].robot_hp = msg->Infantry_5_HP;
+        team_hp[4] = static_cast<double>(msg->Infantry_5_HP);
+        team_status[5].robot_hp = msg->Sentry_HP;
+        team_hp[5] = static_cast<double>(msg->Sentry_HP);
+        team_status[6].robot_hp = msg->OutPose_HP;
+        team_hp[6] = static_cast<double>(msg->OutPose_HP);
+        team_status[7].robot_hp = msg->Base_HP;
+        team_hp[7] = static_cast<double>(msg->Base_HP);
+        team_status_cbk_mutex.unlock();
+    }
     void Blackboard::enemy_hp_callback(const robot_msg::RobotHP::ConstPtr &msg)
     {
         enemy_status_cbk_mutex.lock();
         enemy_status[0].robot_hp = msg->Hero_HP;
-        enemy_hp[0]=static_cast<double>(msg->Hero_HP);
+        enemy_hp[0] = static_cast<double>(msg->Hero_HP);
         enemy_status[1].robot_hp = msg->Engineer_HP;
-        enemy_hp[1]=static_cast<double>(msg->Engineer_HP);
+        enemy_hp[1] = static_cast<double>(msg->Engineer_HP);
         enemy_status[2].robot_hp = msg->Infantry_3_HP;
-        enemy_hp[2]=static_cast<double>(msg->Infantry_3_HP);
+        enemy_hp[2] = static_cast<double>(msg->Infantry_3_HP);
         enemy_status[3].robot_hp = msg->Infantry_4_HP;
-        enemy_hp[3]=static_cast<double>(msg->Infantry_4_HP);
+        enemy_hp[3] = static_cast<double>(msg->Infantry_4_HP);
         enemy_status[4].robot_hp = msg->Infantry_5_HP;
-        enemy_hp[4]=static_cast<double>(msg->Infantry_5_HP);
+        enemy_hp[4] = static_cast<double>(msg->Infantry_5_HP);
         enemy_status[5].robot_hp = msg->Sentry_HP;
-        enemy_hp[5]=static_cast<double>(msg->Sentry_HP);
+        enemy_hp[5] = static_cast<double>(msg->Sentry_HP);
         enemy_status[6].robot_hp = msg->OutPose_HP;
-        enemy_hp[6]=static_cast<double>(msg->OutPose_HP);
+        enemy_hp[6] = static_cast<double>(msg->OutPose_HP);
         enemy_status[7].robot_hp = msg->Base_HP;
-        enemy_hp[7]=static_cast<double>(msg->Base_HP);
+        enemy_hp[7] = static_cast<double>(msg->Base_HP);
         if (game_status == MatchSatuts::AT_MATCH) // 比赛开始后再更新敌方复活状态,TODO:哨兵无敌时间的判定
         {
             for (int i = 0; i < 5; i++)

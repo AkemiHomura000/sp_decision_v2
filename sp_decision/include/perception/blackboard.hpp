@@ -35,14 +35,6 @@ namespace sp_decision
         typedef std::shared_ptr<Blackboard> Ptr;
         Blackboard(const tools::logger::Ptr &logger_ptr);
         ~Blackboard() {}
-        /**
-         * @brief 提供给decision_node的接口
-         * @todo 优化结构，整理冗余
-         */
-        double enemy_hp[8] = {};     // 敌方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
-        double friend_hp[8] = {};    // 友方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
-        double match_remainder = -1; // 比赛剩余时间
-        double match_progress = 0;   // 比赛进程,0为准备，1为进行中，2为结束
 
         std::mutex match_status_cbk_mutex;
         std::mutex sentry_status_cbk_mutex;
@@ -52,13 +44,20 @@ namespace sp_decision
         std::mutex goal_status_mutex;
         std::mutex referee_info_mutex;
         std::mutex enemy_status_cbk_mutex;
+        std::mutex team_status_cbk_mutex;
+        /**
+         * @brief 提供给decision_node的接口
+         * @todo 优化结构，整理冗余
+         */
+        double enemy_hp[8] = {};     // 敌方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
+        double team_hp[8] = {};      // 友方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
+        double match_remainder = -1; // 比赛剩余时间
+        double match_progress = 0;   // 比赛进程,0为准备，1为进行中，2为结束
 
-        // 云台手发布坐标
-        struct Point
-        {
-            double x;
-            double y;
-        };
+        // 云台手发布坐标、key,保存1s，防止检查频率过低导致漏过消息
+        double target[2] = {0, 0};
+        double key_from_char;
+        ros::Time time_received_target_;
         /**
          * @brief 机器人状态结构体
          * TODO 两种复活状态的区分
@@ -80,7 +79,7 @@ namespace sp_decision
             ros::Time last_revive_time; // 上次复活时间
         };
         // 友方状态
-        std::vector<RobotStatus> teammate_status;
+        std::vector<RobotStatus> team_status;
         // 敌方状态
         std::vector<RobotStatus> enemy_status;
         // 比赛状态
@@ -170,6 +169,7 @@ namespace sp_decision
         ros::Subscriber enemy_hp_sub_;
         ros::Subscriber sentry_odom_sub_;
         ros::Subscriber enemy_pos_sub_; // 接收敌方坐标
+        ros::Subscriber team_hp_sub_;   // 接收队友血量
         ros::Publisher enemy_status_pub_;
 
         ros::Subscriber referee_data_sub_;
@@ -182,6 +182,7 @@ namespace sp_decision
         void robot_init();             // 初始化机器人列表
         void referee_info_callback(const robot_msg::RefereeInfoMsg::ConstPtr &msg);
         void enemy_hp_callback(const robot_msg::RobotHP::ConstPtr &msg);
+        void team_hp_callback(const robot_msg::RobotHP::ConstPtr &msg);
         void sentry_pose_callback(const nav_msgs::Odometry::ConstPtr msg);
         void enemy_pose_callback(const robot_msg::Armor::ConstPtr &msg);
     };

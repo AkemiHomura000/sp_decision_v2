@@ -42,16 +42,27 @@ namespace tools
             std::string log = message.str();
             file_logger_->info(log);
         }
-
+        void logInfo(const std::string &msg)
+        {
+            file_logger_->info(msg);
+        }
         void logDebug(const std::stringstream &message)
         {
             std::string log = message.str();
             file_logger_->debug(log);
         }
+          void logDebug(const std::string &msg)
+        {
+            file_logger_->debug(msg);
+        }
         void logError(const std::stringstream &message)
         {
             std::string log = message.str();
             file_logger_->error(log);
+        }
+          void logError(const std::string &msg)
+        {
+            file_logger_->error(msg);
         }
         typedef std::shared_ptr<logger> Ptr;
     private:
