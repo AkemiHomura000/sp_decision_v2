@@ -12,6 +12,7 @@ int main(int argc, char **argv)
     tools::logger::Ptr logger = std::make_shared<tools::logger>();
     tools::yaml_reader::Ptr yaml_read = std::make_shared<tools::yaml_reader>("/home/lp1/sp_nav_ws/src/sp_nav/sp_decision/config/test.yaml");
     sp_decision::Blackboard::Ptr blackboard=std::make_shared<sp_decision::Blackboard>(logger);
+    sp_decision::ChassisExecutor::Ptr chassis=std::make_shared<sp_decision::ChassisExecutor>(logger);
     sp_decision::decision_tree decison_tree_0(yaml_read, blackboard);
     // decison_tree_0.print_tree();
 
