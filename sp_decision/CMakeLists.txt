@@ -50,6 +50,12 @@ target_link_libraries(${PROJECT_NAME}
   yaml-cpp
 )
 
+add_executable(armor_relay
+src/perception/armor_relay.cpp
+)
+target_link_libraries(armor_relay
+  ${catkin_LIBRARIES})
+
 # add_executable(yaml_test
 # src/decision_node/yaml_read.cpp
 # )

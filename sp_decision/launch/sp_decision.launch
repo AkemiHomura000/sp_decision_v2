@@ -1,4 +1,4 @@
 <launch>
-  <node name="sp_decision" pkg="sp_decision" type="sp_decision" output="screen">
-  </node>
+  <node name="sp_decision" pkg="sp_decision" type="sp_decision" output="screen"/>
+  <node name="armor_relay" pkg="sp_decision" type="armor_relay" output="screen"/>
 </launch>
