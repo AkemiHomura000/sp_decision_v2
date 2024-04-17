@@ -83,7 +83,7 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg) {//æ³•å
         long point_num = 0;
         for (long i = 0; i <= pcl2cloud->points.size(); i = i + 1) {
             float gradient = (pow(cloud_normals->points[i].normal_x, 2) + pow(cloud_normals->points[i].normal_y, 2)) / pow(cloud_normals->points[i].normal_z, 2);
-            if(gradient < 1.0f){
+            if(gradient > 1.0f){
                 if(pcl2cloud->points[i].y > 6.6 or pcl2cloud->points[i].y < -6.6){
                     continue;
                 }
