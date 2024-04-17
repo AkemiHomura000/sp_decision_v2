@@ -13,7 +13,7 @@ global_costmap:
 
   static_map: true # 是否使用一个地图或者地图服务器来初始化全局代价地图，如果不使用静态地图，这个参数为false.
   
-  #plugins:
+  plugins:
    #- {name: static_layer,type:"costmap_2d::StaticLayer"} 
-   #- {name: inflation_layer,type: "costmap_2d::InflationLayer"}
+   - {name: inflation_layer,type: "costmap_2d::InflationLayer"}
    #- {name: obstacle_layer,type:"costmap_2d::VoxelLayer"} 

@@ -8,10 +8,14 @@ obstacle_range: 4.0 # 用于障碍物探测，比如: 值为 3.0，意味着检�
 raytrace_range: 4.0 # 用于清除障碍物，比如：值为 3.5，意味着清除代价地图中 3.5 米以外的障碍物
 
 
-#膨胀半径，扩展在碰撞区域以外的代价区域，使得机器人规划路径避开障碍物
-inflation_radius: 0.5 # 0.2
-#代价比例系数，越大则代价值越小
-cost_scaling_factor: 10.0 # 3.0
+# #膨胀半径，扩展在碰撞区域以外的代价区域，使得机器人规划路径避开障碍物
+# inflation_radius: 0.5 # 0.2
+# #代价比例系数，越大则代价值越小
+# cost_scaling_factor: 10.0 # 3.0
+inflation_layer:
+  enabled: true
+  cost_scaling_factor: 5.0
+  inflation_radius: 0.36
 
 #地图类型
 map_type: costmap
@@ -19,9 +23,9 @@ map_type: costmap
 observation_sources: scan
 #对传感器的坐标系和数据进行配置。这个也会用于代价地图添加和清除障碍物。例如，你可以用激光雷达传感器用于在代价地图添加障碍物，再添加kinect用于导航和清除障碍物。
 #scan: {sensor_frame: map, data_type: PointCloud2, topic: cur_scan_in_map, marking: true, clearing: true,inf_is_valid: true}
-scan: {sensor_frame: body, data_type: PointCloud2, topic: cloud_registered_body, marking: true, clearing: true,inf_is_valid: true}
+#scan: {sensor_frame: body, data_type: PointCloud2, topic: cloud_registered_body, marking: true, clearing: true,inf_is_valid: true}
 
-# scan: {sensor_frame: body, data_type: PointCloud2, topic: pointcloud2_out, marking: true, clearing: true,inf_is_valid: true}
+ scan: {sensor_frame: body, data_type: PointCloud2, topic: pointcloud2_out, marking: true, clearing: true,inf_is_valid: true}
    
 
 
