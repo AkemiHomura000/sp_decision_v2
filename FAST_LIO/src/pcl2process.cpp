@@ -77,18 +77,18 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg) {//法�
         ne.setSearchMethod(tree);
         //存储输出数据
         pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>);
-        //ne.setRadiusSearch(0.03); //使用半径在查询点周围3厘米范围内的所有临近元素
-        ne.setKSearch(10); //使用最近的10个点
+        //ne.setRadiusSearch(0.1); //使用半径在查询点周围3厘米范围内的所有临近元素
+        ne.setKSearch(15); //使用最近的10个点
         ne.compute(*cloud_normals);
         long point_num = 0;
         for (long i = 0; i <= pcl2cloud->points.size(); i = i + 1) {
             float gradient = (pow(cloud_normals->points[i].normal_x, 2) + pow(cloud_normals->points[i].normal_y, 2)) / pow(cloud_normals->points[i].normal_z, 2);
-            if(gradient > 1.0f){
+            if(gradient > 0.1f){
                 if(pcl2cloud->points[i].y > 6.6 or pcl2cloud->points[i].y < -6.6){
                     continue;
                 }
                 if(pow(pcl2cloud->points[i].x - current_x, 2) + pow(pcl2cloud->points[i].y - current_y, 2) > 0.09){
-                    pcl2cloud->points[i].z = 0;
+                    pcl2cloud->points[i].z = 0.25;
                     pcl2cloud_out->points.push_back(pcl2cloud->points[i]);
                     point_num = point_num + 1;
                 }

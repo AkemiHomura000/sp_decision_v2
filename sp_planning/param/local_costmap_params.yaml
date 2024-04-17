@@ -2,7 +2,7 @@ local_costmap:
   global_frame: world #里程计坐标系
   robot_base_frame: base_link #机器人坐标系
   
-  inflation_radius: 1.6 # 0.2
+  inflation_radius: 0.3 # 0.2
   cost_scaling_factor: 5.0
   
   update_frequency: 10.0 #代价地图更新频率
