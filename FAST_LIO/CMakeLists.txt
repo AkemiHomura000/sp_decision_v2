@@ -36,6 +36,7 @@ else()
 endif()
 
 find_package(OpenMP QUIET)
+find_package(yaml-cpp REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS}")
 
@@ -99,8 +100,7 @@ target_link_libraries(fastlio_mapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${PYT
 target_include_directories(fastlio_mapping PRIVATE ${PYTHON_INCLUDE_DIRS})
 
 add_executable(map_generate tools/map_generate.cpp)
-target_link_libraries(map_generate 
-                                 ${PCL_LIBRARIES})  
+target_link_libraries(map_generate ${PCL_LIBRARIES})  
 add_executable(pcl2process src/pcl2process.cpp)
-target_link_libraries(pcl2process ${catkin_LIBRARIES}) 
+target_link_libraries(pcl2process ${catkin_LIBRARIES} yaml-cpp) 
                                 

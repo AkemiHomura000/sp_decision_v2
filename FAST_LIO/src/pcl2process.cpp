@@ -33,24 +33,57 @@
 // #include <pcl/features/normal_3d.h>
 // #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/surface/mls.h>
-
+#include <yaml-cpp/yaml.h>
 #include "math.hpp"
 tf2_ros::Buffer tfBuffer;
 ros::Publisher pcl_publisher;
+// 定义一个结构体slope_body，用于存储斜坡的四个角点，底边中心点，法向量
 struct slope_body
 {
-    std::vector<Eigen::Vector2f> points; // 四个角点
+    std::vector<Eigen::Vector3f> points; // 四个角点
     Eigen::Vector3f point_center;        // 底边中心点
     Eigen::Vector3f normal_vector;       // 平面法向量
+    float h;                             // 斜坡高度
 };
+std::vector<slope_body> slopes;
 slope_body slope1;
 // 定义一个结构体PointInt，用于存储点的x,y,z坐标
 struct PointInt
 {
     int p_x, p_y, p_z;
 };
-// 定义一个结构体slope_body，用于存储斜坡的四个角点，底边中心点，法向量
-
+// 计算平面的法向量,确保指向上方
+void calculate_normal(slope_body &slope)
+{
+    Eigen::Vector3f vector1 = slope.points[0] - slope.points[1];
+    Eigen::Vector3f vector2 = slope.points[1] - slope.points[2];
+    Eigen::Vector3f normal = vector1.cross(vector2);
+    if (normal[2] < 0)
+        normal = -normal;
+    slope.normal_vector = normal / normal.norm();
+}
+// 读取yaml文件，进行初始化
+void init_slopes()
+{
+    YAML::Node config = YAML::LoadFile("slopes.yaml");
+    for (const auto &slope_node : config["slopes"])
+    {
+        slope_body slope;
+        for (int i = 0; i < 4; ++i)
+        {
+            Eigen::Vector3f point;
+            point[0] = slope_node["points"][i]["x"].as<float>();
+            point[1] = slope_node["points"][i]["y"].as<float>();
+            point[2] = slope_node["points"][i]["z"].as<float>();
+            slope.points.push_back(point);
+        }
+        slope.point_center[0] = slope_node["points"][4]["x"].as<float>();
+        slope.point_center[1] = slope_node["points"][4]["y"].as<float>();
+        slope.point_center[2] = slope_node["points"][4]["z"].as<float>();
+        calculate_normal(slope);
+        slopes.push_back(slope);
+    }
+}
 /**
  * @brief  检查点是否在平面区域内
  *
@@ -115,10 +148,11 @@ void transform_slope(slope_body &slope, const geometry_msgs::TransformStamped &t
     {
         in.pose.position.x = slope.points[i][0];
         in.pose.position.y = slope.points[i][1];
-        in.pose.position.z = 0;
+        in.pose.position.z = slope.points[i][2];
         out = tools::trans(in, transform);
         slope.points[i][0] = out.pose.position.x;
         slope.points[i][1] = out.pose.position.y;
+        slope.points[i][2] = out.pose.position.z;
     }
     // 更新中心点
     in.pose.position.x = slope.point_center[0];
@@ -167,10 +201,14 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
         long point_num = 0;
         for (long i = 0; i <= pcl2cloud->points.size(); i = i + 1)
         {
-            if (!pnpoly(pcl2cloud_out->points[i].x, pcl2cloud_out->points[i].y, slope_1))
-                return;
-            if (!normal_judge(pcl2cloud_out->points[i].x, pcl2cloud_out->points[i].y, pcl2cloud_out->points[i].z, slope_1))
-                break;
+            int num = 0;
+            for (num; num < slopes.size(); num++)
+            {
+                if (pnpoly(pcl2cloud_out->points[i].x, pcl2cloud_out->points[i].y, slopes[num]))
+                    break;
+            }
+            if (num<slopes.size()&&(!normal_judge(pcl2cloud_out->points[i].x, pcl2cloud_out->points[i].y, pcl2cloud_out->points[i].z, slopes[num])))
+                continue;
             pcl2cloud_out->points.push_back(pcl2cloud->points[i]);
             point_num = point_num + 1;
         }
@@ -210,9 +248,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "pointcloud_process");
     ros::NodeHandle pnh("~");
-    slope1.points = {{0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f}};
-    slope1.point_center = {0.0f, 0.0f, 0.0f};
-    slope1.normal_vector = {0.0f, 0.0f, 0.0f};
+    init_slopes();
     tf2_ros::TransformListener tfListener(tfBuffer);
     auto subCloud = pnh.subscribe<sensor_msgs::PointCloud2>("/cloud_registered_body", 1, getcloud_vec);
     pcl_publisher = pnh.advertise<sensor_msgs::PointCloud2>("/pointcloud2_out", 1);
