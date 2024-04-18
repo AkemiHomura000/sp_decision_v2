@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/opt/ros/noetic/include/**",
+        "/home/lp1/sp_nav_ws/devel/include/**",
+        "/home/lp1/sp_nav_ws/src/sp_nav/aerial_navigation/include/**",
+        "/home/lp1/sp_nav_ws/src/sp_nav/FAST_LIO/include/**",
+        "/home/lp1/sp_nav_ws/src/sp_nav/sentry_communicator/include/**",
+        "/home/lp1/sp_nav_ws/src/sp_nav/sp_decision/include/**",
+        "/home/lp1/sp_nav_ws/src/sp_nav/sp_planning/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

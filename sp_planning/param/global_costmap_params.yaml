@@ -2,8 +2,8 @@ global_costmap:
   global_frame: world #地图坐标系
   robot_base_frame: base_link #机器人坐标系
   # PID
-  inflation_radius: 0.35
-  cost_scaling_factor: 100.0
+  inflation_radius:  0.6
+  cost_scaling_factor: 10.0
   #inflation_radius: 0.40 #max:0.45
   #cost_scaling_factor: 100.0
   
