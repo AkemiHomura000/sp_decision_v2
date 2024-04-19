@@ -61,13 +61,20 @@ src/perception/armor_relay.cpp
 target_link_libraries(armor_relay
   ${catkin_LIBRARIES})
 
-  add_executable(cloud_tracker
+add_executable(cloud_tracker
 src/perception/cloud_tracker.cpp
 )
 target_link_libraries(cloud_tracker
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${PCL_LIBRARIES})
+
+add_executable(cmd_vel_test
+src/perception/cmd_vel_test.cpp
+)
+target_link_libraries(cmd_vel_test
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS})
 
 # add_executable(yaml_test
 # src/decision_node/yaml_read.cpp
