@@ -23,8 +23,13 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(Eigen3 REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(PCL 1.8 REQUIRED)
 
+include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${EIGEN3_INCLUDE_DIR})
+include_directories(${PCL_INCLUDE_DIRS})
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sp_decision
@@ -55,6 +60,14 @@ src/perception/armor_relay.cpp
 )
 target_link_libraries(armor_relay
   ${catkin_LIBRARIES})
+
+  add_executable(cloud_tracker
+src/perception/cloud_tracker.cpp
+)
+target_link_libraries(cloud_tracker
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+  ${PCL_LIBRARIES})
 
 # add_executable(yaml_test
 # src/decision_node/yaml_read.cpp
