@@ -26,6 +26,43 @@
 
 namespace sp_decision
 {
+    class costmap
+    {
+    public:
+        /**
+         * @brief 创建costmap
+         *
+         * @param width 格子数
+         * @param height 格子数
+         * @param resolution 每个格子的分辨率(m)
+         */
+        costmap(int width, int height, int resolution)
+        {
+            this->width = width;
+            this->height = height;
+            this->resolution = resolution;
+            int init_grid = 0;
+            for (int i = 0; i < width * height; i++)
+            {
+                grid.push_back(init_grid);
+            }
+        }
+
+        int get(int x, int y)
+        {
+            if (x < 0 || x >= width || y < 0 || y >= height)
+            {
+                return -1;
+            }
+            return grid[x + y * width];
+        }
+        std::vector<int> grid; // 按行储存
+        int width;
+        int height;
+        int resolution;
+        cv::Mat costmap_image;
+    private:
+    };
     class CloudTracker
     {
     public:
@@ -111,7 +148,7 @@ namespace sp_decision
             bool ok = tracker->update(costmap, bbox);
             if (ok)
             {
-                //cv::rectangle(costmap, bbox, cv::Scalar(255, 0, 0), 2, 1);
+                // cv::rectangle(costmap, bbox, cv::Scalar(255, 0, 0), 2, 1);
             }
             else
             {

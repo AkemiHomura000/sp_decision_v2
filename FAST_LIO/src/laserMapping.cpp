@@ -1029,7 +1029,6 @@ int main(int argc, char** argv)
                 dump_lio_state_to_log(fp);
             }
         }
-
         status = ros::ok();
         rate.sleep();
     }

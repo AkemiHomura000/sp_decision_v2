@@ -327,7 +327,7 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg) {//æ³•å
         pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
         pcl::VoxelGrid<pcl::PointXYZ> filter;
         filter.setInputCloud(pcl2cloud);
-        filter.setLeafSize(0.005f, 0.005f, 0.005f);
+        filter.setLeafSize(0.01f, 0.01f, 0.01f);
         filter.filter(*pcl2cloud);
         ne.setInputCloud(pcl2cloud);
         pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
