@@ -6,7 +6,7 @@ shutdown_costmaps: false # 默认false,当 move_base 处于非活动状态时是
 # base_local_planner: "teb_local_planner/TebLocalPlannerROS" # TEB局部路径规划器
 # base_local_planner: "dwa_local_planner/DWAPlannerROS" # TEB局部路径规划器
 
-controller_frequency : 100.0 # 默认20.0,速度发送命令的速率(Hz)
+controller_frequency : 50.0 # 默认20.0,速度发送命令的速率(Hz)
 controller_patience : 10.0 # 默认15.0,在执行空间清理之前，控制器在没有收到有效控制的情况下等待时间(s)
 
 planner_patience : 1.0 # 默认5.0,在执行空间清理之前，planner等待寻找有效计划的时间(s)

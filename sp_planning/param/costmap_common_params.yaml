@@ -3,7 +3,7 @@
 robot_radius: 0.25 #圆形
 # footprint: [[-0.45, -0.45], [-0.45, 0.45], [0.45, 0.45], [0.45, -0.45]] #其他形状
 footprint_padding: 0.05
-max_obstacle_height: 0.5 
+max_obstacle_height: 0.9 
 obstacle_range: 4.0 # 用于障碍物探测，比如: 值为 3.0，意味着检测到距离小于 3 米的障碍物时，就会引入代价地图
 raytrace_range: 4.0 # 用于清除障碍物，比如：值为 3.5，意味着清除代价地图中 3.5 米以外的障碍物
 

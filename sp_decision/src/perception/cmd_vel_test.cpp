@@ -15,6 +15,7 @@ ros::Publisher sentry_odo_pub_;
 ros::Publisher pubOdomAftMapped;
 ros::Time last_time;
 nav_msgs::Odometry odo_receive;
+nav_msgs::Odometry odo_publish;
 bool odo_received;
 void get_cmd_vel(const geometry_msgs::Twist &msg)
 {
@@ -24,7 +25,7 @@ void get_cmd_vel(const geometry_msgs::Twist &msg)
     geometry_msgs::Twist vel;
     vel.linear.x = msg.linear.x;
     vel.linear.y = msg.linear.y;
-    vel.angular.z = 0;
+    vel.angular.z = -4;
     sentry_cmd_vel_pub_.publish(vel);
     // 计算速度矢量的大小
     double magnitude = sqrt(pow(msg.linear.x, 2) + pow(msg.linear.y, 2));
@@ -77,33 +78,60 @@ void get_cmd_vel(const geometry_msgs::Twist &msg)
 
     // odom_pub.publish(odom);
 }
-// void get_odo(const nav_msgs::Odometry::ConstPtr msg)
-// {
-//     odo_received = true;
-//     odo_receive = msg;
-//     last_time=ros::Time::now();
-// }
-// void odo_pub()
-// {
-//     if (odo_received)
-//     {
-//         pubOdomAftMapped.publish(odo_msg);
-//         odo_received = false;
-//     }
-//     else
-//     {
-//         odo_msg.twist.twist.angular.z = (new_yaw - last_yaw) / duration;
-//     }
-// }
+void get_odo(const nav_msgs::Odometry::ConstPtr msg)
+{
+    odo_received = true;
+    odo_receive = *msg;
+    last_time = ros::Time::now();
+}
+void odo_pub()
+{
+    // if (odo_received)
+    // {
+    //     pubOdomAftMapped.publish(odo_receive);
+    //     odo_received = false;
+    // }
+    // else
+    // {
+        odo_publish = odo_receive;
+        Eigen::Quaterniond q(odo_receive.pose.pose.orientation.w, odo_receive.pose.pose.orientation.x, odo_receive.pose.pose.orientation.y, odo_receive.pose.pose.orientation.z);
+        Eigen::Vector3d euler = tools::eulers(q, 2, 1, 0);
+        double yaw = euler[0];
+        double w = odo_receive.twist.twist.angular.z;
+
+        yaw += 10*w * (ros::Time::now() - last_time).toSec();
+        yaw=tools::limit_rad(yaw);
+        ROS_INFO("w-----------:%f",w * (ros::Time::now() - last_time).toSec());
+        ROS_INFO("yaw-----------:%f", yaw);
+        // 根据欧拉角构造旋转矩阵
+        Eigen::Matrix3d rotation_matrix;
+        rotation_matrix = Eigen::AngleAxisd(euler[2], Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd(euler[1], Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+        // 将旋转矩阵转换为四元数
+        Eigen::Quaterniond quaternion(rotation_matrix);
+        odo_publish.pose.pose.orientation.w = quaternion.w();
+        odo_publish.pose.pose.orientation.x = quaternion.x();
+        odo_publish.pose.pose.orientation.y = quaternion.y();
+        odo_publish.pose.pose.orientation.z = quaternion.z();
+        pubOdomAftMapped.publish(odo_publish);
+    //}
+}
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "cmd_vel_test");
     ros::NodeHandle nh("~");
     vel_img = cv::Mat(400, 400, CV_8UC1, cv::Scalar(0));
     ros::Subscriber enemy_sub_ = nh.subscribe("/cmd_vel", 1, get_cmd_vel);
-    //ros::Subscriber odo = nh.subscribe("/Odometry1", 1, get_odo);
+    ros::Subscriber odo = nh.subscribe("/Odometry1", 1, get_odo);
     sentry_cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("/sentry/cmd_vel", 1);
     sentry_yaw_pub_ = nh.advertise<robot_msg::CmdGimbal>("/sentry/cmd_gimbal", 1);
     pubOdomAftMapped = nh.advertise<nav_msgs::Odometry>("/Odometry", 100000);
-    ros::spin();
+    ros::Rate rate(100); // 设置发布频率为10Hz
+    // while (ros::ok)
+    // {
+    //     odo_pub();
+    //     ros::spinOnce();
+    //     rate.sleep();
+    //     // ros::Duration(0.01).sleep();
+    // }
+     ros::spin();
 }
