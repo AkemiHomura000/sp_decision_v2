@@ -7,9 +7,17 @@ namespace sp_decision
         set_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
         sentry_cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/sentry/cmd_vel", 1);
         robot_state_pub_ = nh_.subscribe("robot_state", 10, &ChassisExecutor::robot_state_sub, this);
+        rotate_state_pub_ = nh_.subscribe("rotate_state", 10, &ChassisExecutor::rotate_state_sub, this);
         cmd_vel_sub_ = nh_.subscribe("cmd_vel", 10, &ChassisExecutor::cmd_vel_callback, this);
+        rotate_state_ = RotateState::ROTATE;
         target_pose_.pose.position.x = 100;
         target_pose_.pose.position.y = 100; // 确保初值不会和第一个点冲突--------待优化
+    }
+    void ChassisExecutor::rotate_state_sub(const robot_msg::RobotStateMsg &rotate_state)
+    {
+        rotate_state_cbk_mutex.lock();
+        rotate_state_ = static_cast<RotateState>(rotate_state.robot_state);
+        rotate_state_cbk_mutex.unlock();
     }
     void ChassisExecutor::robot_state_sub(const robot_msg::RobotStateMsg &robot_state)
     {
@@ -26,24 +34,30 @@ namespace sp_decision
         geometry_msgs::Twist sentry_cmd_vel;
         switch (robot_state_)
         {
+        case RobotState::SLOW:
+            sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 0.4);
+            sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 0.4);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
+            break;
         case RobotState::MOVE:
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 1.0);
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 1.0);
-            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
             break;
         case RobotState::FAST:
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x * 2, 3.0);
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x * 2, 3.0);
-            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
             break;
         case RobotState::STOP:
             sentry_cmd_vel.linear.x = 0;
             sentry_cmd_vel.linear.x = 0;
-            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
             break;
         default:
             break;
         }
+        sentry_cmd_vel_pub_.publish(sentry_cmd_vel);
         nav_cmd_vel_cbk_mutex.unlock();
     }
     void ChassisExecutor::localization_callback(const nav_msgs::Odometry::ConstPtr msg)
@@ -52,7 +66,7 @@ namespace sp_decision
         localization_ = *msg;
         localization_cbk_mutex.unlock();
     }
-    int ChassisExecutor::send_goal(double pos_x, double pos_y, double w)
+    int ChassisExecutor::send_goal(double pos_x, double pos_y)
     {
         // 距离小于0.1m认为到达
         if ((sqrt(pow(pos_x - localization_.pose.pose.position.x, 2) + pow(pos_y - localization_.pose.pose.position.y, 2))) < 0.1)
@@ -73,7 +87,7 @@ namespace sp_decision
                         last_judge_time_ = ros::Time::now();
                         last_cmd_vel_.linear.x = cmd_vel_.linear.x;
                         last_cmd_vel_.linear.y = cmd_vel_.linear.y;
-                        directly_send_goal(pos_x, pos_y, w);
+                        directly_send_goal(pos_x, pos_y);
                         return 0;
                     }
                     else
@@ -81,7 +95,7 @@ namespace sp_decision
                         last_judge_time_ = ros::Time::now();
                         last_cmd_vel_.linear.x = cmd_vel_.linear.x;
                         last_cmd_vel_.linear.y = cmd_vel_.linear.y;
-                        directly_send_goal(pos_x, pos_y, w);
+                        directly_send_goal(pos_x, pos_y);
                         return 1;
                     }
                 }
@@ -103,13 +117,13 @@ namespace sp_decision
                 last_judge_time_ = ros::Time::now();
                 last_cmd_vel_.linear.x = cmd_vel_.linear.x;
                 last_cmd_vel_.linear.y = cmd_vel_.linear.y;
-                directly_send_goal(pos_x, pos_y, w);
+                directly_send_goal(pos_x, pos_y);
                 nav_status_ = 1;
                 return 1;
             }
         }
     }
-    void ChassisExecutor::directly_send_goal(double pos_x, double pos_y, double w)
+    void ChassisExecutor::directly_send_goal(double pos_x, double pos_y)
     {
         target_pose_.header.frame_id = "map";
         target_pose_.header.stamp = ros::Time::now();
@@ -118,8 +132,246 @@ namespace sp_decision
         target_pose_.pose.orientation.x = 0.0;
         target_pose_.pose.orientation.y = 0.0;
         target_pose_.pose.orientation.z = 0.0;
-        target_pose_.pose.orientation.w = w;
+        target_pose_.pose.orientation.w = 1;
         goal_.target_pose = target_pose_;
         set_goal_pub_.publish(goal_);
+    }
+    // 基本动作1——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    void ChassisExecutor::range_move(std::vector<Eigen::Vector2d> points)
+    {
+        Eigen::Vector2d target;
+        int result;
+        switch (action_status_)
+        {
+        case 0: // 初始化
+            target = point_generate(points);
+            if (send_goal(target[0], target[1]) == 1)
+            {
+                action_status_ = 2;
+                last_target = target;
+            }
+            else
+            {
+                rotate_inplace();
+                action_status_ = 1;
+            }
+            break;
+        case 1: // 搜寻可行域
+            target = point_generate(points);
+            if (send_goal(target[0], target[1]) == 1)
+            {
+                action_status_ = 2;
+                last_target = target;
+            }
+            else
+            {
+                rotate_inplace();
+                action_status_ = 1;
+            }
+            break;
+        case 2: // 前往
+            result = send_goal(last_target[0], last_target[1]);
+            if (result = 0)
+            {
+                rotate_inplace();
+                action_status_ = 1;
+            }
+            else if (result = 1)
+                action_status_ = 2;
+            else if (result = 2)
+                action_status_ = 3;
+            break;
+        case 3: // 到达
+            send_goal(last_target[0], last_target[1]);
+            break;
+        case 4: // 失败
+            break;
+        default:
+            break;
+        }
+    }
+    bool isInsidePolygon(const std::vector<Eigen::Vector2d> &polygon, const Eigen::Vector2d &point)
+    {
+        bool inside = false;
+        int i, j = polygon.size() - 1;
+        for (i = 0; i < polygon.size(); i++)
+        {
+            if ((polygon[i][1] < point[1] && polygon[j][1] >= point[1] || polygon[j][1] < point[1] && polygon[i][1] >= point[1]) &&
+                (polygon[i][0] <= point[0] || polygon[j][0] <= point[0]))
+            {
+                inside ^= (polygon[i][0] + (point[1] - polygon[i][1]) / (polygon[j][1] - polygon[i][1]) * (polygon[j][0] - polygon[i][0]) < point[0]);
+            }
+            j = i;
+        }
+        return inside;
+    }
+    Eigen::Vector2d ChassisExecutor::point_generate(std::vector<Eigen::Vector2d> points)
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        double minX = std::numeric_limits<double>::max();
+        double maxX = std::numeric_limits<double>::min();
+        double minY = std::numeric_limits<double>::max();
+        double maxY = std::numeric_limits<double>::min();
+        for (const Eigen::Vector2d &p : points)
+        {
+            if (p[0] < minX)
+                minX = p[0];
+            if (p[0] > maxX)
+                maxX = p[0];
+            if (p[1] < minY)
+                minY = p[1];
+            if (p[1] > maxY)
+                maxY = p[1];
+        }
+        // 定义生成随机数的分布
+        std::uniform_real_distribution<> disX(minX, maxX);
+        std::uniform_real_distribution<> disY(minY, maxY);
+        // 随机生成点，直到生成的点在多边形内部
+        Eigen::Vector2d randomPoint;
+        do
+        {
+            randomPoint[0] = disX(gen);
+            randomPoint[1] = disY(gen);
+        } while (!isInsidePolygon(points, randomPoint));
+        return randomPoint;
+    }
+    // 基本动作2——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    void ChassisExecutor::rotate_inplace()
+    {
+        robot_state_ = RobotState::SLOW;
+        rotate_state_ = RotateState::ROTATE;
+        send_goal(localization_.pose.pose.position.x, localization_.pose.pose.position.y);
+    }
+    // 基本动作3——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    void ChassisExecutor::cequence_move(std::vector<Eigen::Vector2d> points, std::vector<float> wait_time, bool circulate)
+    {
+        int n = action_status_ / 3;
+        switch (action_status_ % 3)
+        {
+        case 0:
+            if (circulate == true && n == points.size()) // 进入循环
+            {
+                action_status_ = 0;
+                n = 0;
+            }
+            if (wait_time[n] > 0 && n > 0) // 到达后停留
+            {
+                rotate_inplace();
+                wait_time[n - 1] -= (ros::Time::now() - last_reach_time).sec;
+            }
+            if (send_goal(points[n][0], points[n][1]) == 1)
+                action_status_ += 1;
+            else
+            {
+                rotate_inplace();
+                action_status_ += 2;
+            }
+            break;
+        case 1:
+            if (send_goal(points[n][0], points[n][1]) == 0)
+            {
+                rotate_inplace();
+                action_status_ += 1;
+            }
+            else if (send_goal(points[n][0], points[n][1]) == 2)
+            {
+                rotate_inplace();
+                action_status_ += 2;
+                last_reach_time = ros::Time::now();
+            }
+            break;
+        case 2:
+            if (send_goal(points[n][0], points[n][1]) == 1)
+            {
+                action_status_ -= 1;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    // 基本动作4——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    void ChassisExecutor::single_point_move(Eigen::Vector2d point, Eigen::Vector2d alternate_point)
+    {
+        switch (action_status_)
+        {
+        case 0:
+            if (send_goal(point[0], point[1]) == 1)
+            {
+                action_status_ = 1;
+            }
+            else if (send_goal(alternate_point[0], alternate_point[1]) == 1)
+            {
+                action_status_ = 3;
+            }
+            else
+            {
+                rotate_inplace();
+                action_status_ = 5;
+            }
+            break;
+        case 1:
+            if (send_goal(point[0], point[1]) == 2)
+            {
+                rotate_inplace();
+                action_status_ = 2;
+            }
+            else if (send_goal(point[0], point[1]) == 0)
+            {
+                if (send_goal(alternate_point[0], alternate_point[1]) == 1)
+                {
+                    action_status_ = 3;
+                }
+                else
+                {
+                    rotate_inplace();
+                    action_status_ = 5;
+                }
+            }
+            break;
+        case 2:
+            rotate_inplace();
+            action_status_ = 2;
+            break;
+        case 3:
+            if (send_goal(alternate_point[0], alternate_point[1]) == 2)
+            {
+                action_status_ = 4;
+            }
+            else if (send_goal(alternate_point[0], alternate_point[1]) == 0)
+            {
+                rotate_inplace();
+                action_status_ = 5;
+            }
+            break;
+        case 4:
+            if (send_goal(point[0], point[1]) == 1)
+            {
+                action_status_ = 1;
+            }
+            else
+            {
+                rotate_inplace();
+                action_status_ = 5;
+            }
+        case 5:
+            if (send_goal(point[0], point[1]) == 1)
+            {
+                action_status_ = 1;
+            }
+            else if(send_goal(alternate_point[0], alternate_point[1]) == 1)
+            {
+                action_status_ = 3;
+            }
+            else 
+            {
+                rotate_inplace();
+                action_status_ = 5;
+            }
+            break;
+        default:
+            break;
+        }
     }
 }
