@@ -31,6 +31,8 @@ namespace sp_decision
     class ChassisExecutor
     {
     public:
+        typedef std::shared_ptr<ChassisExecutor> Ptr;
+        int action_status_; // 动作状态,每次进入新动作需初始化为0
         std::mutex robot_state_cbk_mutex;
         std::mutex rotate_state_cbk_mutex;
         std::mutex nav_cmd_vel_cbk_mutex;
@@ -50,7 +52,6 @@ namespace sp_decision
             ROTATE,
         };
         ChassisExecutor(const tools::logger::Ptr &logger_ptr);
-        typedef std::shared_ptr<ChassisExecutor> Ptr;
         int send_goal(double pos_x, double pos_y);           // 0为失败，1为进行中，2为成功到达
         void directly_send_goal(double pos_x, double pos_y); // 直接发布目标点
         void robot_state_sub(const robot_msg::RobotStateMsg &robot_state);
@@ -97,7 +98,6 @@ namespace sp_decision
         nav_msgs::Odometry localization_;   // 定位信息
         ros::Time last_judge_time_;         // 判断路径是否存在的计时器
         int nav_status_;                    // 导航状态
-        int action_status_;                 // 动作状态,每次进入新动作需初始化为0
         tools::logger::Ptr logger_ptr_;
         ros::NodeHandle nh_;
         ros::Publisher set_goal_pub_;       // 导航目标发布

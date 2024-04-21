@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   robot_msg
   roscpp
   rospy
+  roslib
   geometry_msgs
   nav_msgs
   actionlib
@@ -49,6 +50,8 @@ src/main.cpp
 src/perception/blackboard.cpp
 src/executor/chassis.cpp
 src/decision_node/decision_tree.cpp
+src/executor/control_node.cpp
+src/executor/gimbal.cpp
 )
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}

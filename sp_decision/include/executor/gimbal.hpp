@@ -26,10 +26,11 @@ namespace sp_decision
     class GimbalExecutor
     {
     public:
+        typedef std::shared_ptr<GimbalExecutor> Ptr;
         std::mutex robot_state_cbk_mutex;
         GimbalExecutor(const tools::logger::Ptr &logger_ptr);
-        typedef std::shared_ptr<GimbalExecutor> Ptr;
-        void gimbal_set(double min_angle, double max_angle,bool pitch_enable);
+        void gimbal_set(double min_angle, double max_angle, bool pitch_enable);
+
     private:
         tools::logger::Ptr logger_ptr_;
         ros::NodeHandle nh_;

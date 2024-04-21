@@ -16,6 +16,7 @@
 #include <thread> // For std::this_thread::sleep_for
 #include <ros/ros.h>
 #include <signal.h>
+#include <ros/package.h>
 
 #include "robot_msg/DecisionMsg.h"
 #include "perception/blackboard.hpp"
@@ -75,7 +76,7 @@ namespace sp_decision
         double c;
         int num;
         static void sighandler(int signum); // 设置退出函数
-        decision_tree(const tools::yaml_reader::Ptr &yaml_ptr, const sp_decision::Blackboard::Ptr &blackboard_ptr);
+        decision_tree(const sp_decision::Blackboard::Ptr &blackboard_ptr);
         ~decision_tree();
         void node_ptr_init();              // 生成决策图
         tree_node *judge(tree_node *node); // 执行判断

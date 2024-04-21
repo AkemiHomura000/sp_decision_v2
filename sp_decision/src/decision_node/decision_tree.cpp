@@ -30,7 +30,7 @@ namespace sp_decision
     {
         printf("用户退出...\n");
     }
-    decision_tree::decision_tree(const tools::yaml_reader::Ptr &yaml_ptr, const sp_decision::Blackboard::Ptr &blackboard_ptr)
+    decision_tree::decision_tree(const sp_decision::Blackboard::Ptr &blackboard_ptr)
     {
         decision_pub =
             nh_.advertise<robot_msg::EnemyStage>("/sentry/decision", 1);
@@ -39,7 +39,7 @@ namespace sp_decision
         b = 3;
         c = 0;
         num = 0;
-        yaml_reader_ptr_ = yaml_ptr;
+        yaml_reader_ptr_ = std::make_shared<tools::yaml_reader>(ros::package::getPath("sp_decision") + "/config/test.yaml");;
         blackboard_ptr_ = blackboard_ptr;
         node_ptr_init(); // 生成决策图
     }
