@@ -79,6 +79,13 @@ target_link_libraries(cmd_vel_test
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS})
 
+add_executable(map_matching
+include/tools/map_matching.cpp)
+target_link_libraries(map_matching
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+    yaml-cpp)
+  
 # add_executable(yaml_test
 # src/decision_node/yaml_read.cpp
 # )
