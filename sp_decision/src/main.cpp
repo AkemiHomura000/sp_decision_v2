@@ -15,7 +15,7 @@ int main(int argc, char **argv)
     sp_decision::Blackboard::Ptr blackboard = std::make_shared<sp_decision::Blackboard>(logger);
     sp_decision::ChassisExecutor::Ptr chassis = std::make_shared<sp_decision::ChassisExecutor>(logger);
     sp_decision::GimbalExecutor::Ptr gimbal = std::make_shared<sp_decision::GimbalExecutor>(logger);
-    sp_decision::ControlNode::Ptr control_node = std::make_shared<sp_decision::ControlNode>(blackboard,chassis, gimbal, logger);
+    //sp_decision::ControlNode::Ptr control_node = std::make_shared<sp_decision::ControlNode>(blackboard,chassis, gimbal, logger);
     sp_decision::decision_tree decison_tree_0( blackboard);
     decison_tree_0.print_tree();
     //decison_tree_0.run_start();

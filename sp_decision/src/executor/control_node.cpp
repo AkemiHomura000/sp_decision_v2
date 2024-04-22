@@ -1,15 +1,12 @@
 #include "executor/control_node.hpp"
 namespace sp_decision
 {
-    ControlNode::ControlNode(const Blackboard::Ptr &blackboard_ptr,
-                             const ChassisExecutor::Ptr &chassis_ptr,
-                             const GimbalExecutor::Ptr &gimbal_ptr,
-                             const tools::logger::Ptr &logger_ptr)
+    ControlNode::ControlNode(const Blackboard::Ptr &blackboard_ptr, const tools::logger::Ptr &logger_ptr)
     {
-        blackboard_ptr_=blackboard_ptr;
-        chassis_ptr_ = chassis_ptr;
-        gimbal_ptr_ = gimbal_ptr;
+        blackboard_ptr_ = blackboard_ptr;
         logger_ptr_ = logger_ptr;
+        chassis_ptr_ = std::make_shared<sp_decision::ChassisExecutor>(logger_ptr_);
+        gimbal_ptr_ = std::make_shared<sp_decision::GimbalExecutor>(logger_ptr_);
         yaml_reader_ptr_ = std::make_shared<tools::yaml_reader>(ros::package::getPath("sp_decision") + "/config/points.yaml");
         loop_rate = 20.0;
         last_decision_ = "null";

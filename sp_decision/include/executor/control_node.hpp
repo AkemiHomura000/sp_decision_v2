@@ -14,10 +14,7 @@ namespace sp_decision
     public:
         typedef std::shared_ptr<ControlNode> Ptr;
         std::mutex decision_cbk_mutex;
-        ControlNode(const Blackboard::Ptr &blackboard_ptr,
-                    const ChassisExecutor::Ptr &chassis_ptr,
-                    const GimbalExecutor::Ptr &gimbal_ptr,
-                    const tools::logger::Ptr &logger_ptr);
+        ControlNode(const Blackboard::Ptr &blackboard_ptr, const tools::logger::Ptr &logger_ptr);
         ~ControlNode();
         void decision_sub(const robot_msg::DecisionMsg &decision);
         void execute_decision(); // 执行决策
