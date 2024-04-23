@@ -10,6 +10,7 @@ namespace sp_decision
         robot_state_pub_ = nh_.subscribe("robot_state", 10, &ChassisExecutor::robot_state_sub, this);
         rotate_state_pub_ = nh_.subscribe("rotate_state", 10, &ChassisExecutor::rotate_state_sub, this);
         cmd_vel_sub_ = nh_.subscribe("cmd_vel", 10, &ChassisExecutor::cmd_vel_callback, this);
+        localization_sub_=nh_.subscribe("localization", 10, &ChassisExecutor::localization_callback, this);
         enemy_pos_pub_ = nh_.advertise<geometry_msgs::Pose>("/need_filterate/enemy_pos", 10);
         rotate_state_ = RotateState::ROTATE;
         target_pose_.pose.position.x = 100;
@@ -70,8 +71,10 @@ namespace sp_decision
     }
     int ChassisExecutor::send_goal(double pos_x, double pos_y)
     {
-        // 距离小于0.1m认为到达
-        if ((sqrt(pow(pos_x - localization_.pose.pose.position.x, 2) + pow(pos_y - localization_.pose.pose.position.y, 2))) < 0.1)
+        double d=sqrt(pow(pos_x - localization_.pose.pose.position.x, 2) + pow(pos_y - localization_.pose.pose.position.y, 2));
+        std::cout<<"d="<<d<<std::endl;
+        // 距离小于0.2m认为到达
+        if (d< 0.2)
         {
             return 2;
         }
@@ -296,6 +299,7 @@ namespace sp_decision
     // 基本动作4——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     void ChassisExecutor::single_point_move(Eigen::Vector2d point, Eigen::Vector2d alternate_point)
     {
+        ROS_INFO("status------%d",action_status_);
         switch (action_status_)
         {
         case 0:

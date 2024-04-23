@@ -347,15 +347,15 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
     }
     else
     {
-        if ((ros::Time::now().sec - last_receive_time.sec) < 0.3)
-            need_filiterate = true;
-        else
-            need_filiterate = false;
+        // if ((ros::Time::now().sec - last_receive_time.sec) < 0.3)
+        //     need_filiterate = true;
+        // else
+        //     need_filiterate = false;
         ROS_INFO("points.size: %d", pcl2cloud->points.size());
         pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
         pcl::VoxelGrid<pcl::PointXYZ> filter;
         filter.setInputCloud(pcl2cloud);
-        filter.setLeafSize(0.005f, 0.005f, 0.005f);
+        filter.setLeafSize(0.01f, 0.01f, 0.01f);
         filter.filter(*pcl2cloud);
         ne.setInputCloud(pcl2cloud);
         pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>());
@@ -383,10 +383,10 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
             float gradient = (pow(cloud_normals->points[i].normal_x, 2) + pow(cloud_normals->points[i].normal_y, 2)) / pow(cloud_normals->points[i].normal_z, 2);
             if (gradient > 0.7f)
             {
-                if (need_filiterate && sqrt(pow(pcl2cloud->points[i].x - enemy_pos[0], 2) + pow(pcl2cloud->points[i].y - enemy_pos[1], 2)) < 0.5)
-                {
-                    continue;
-                }
+                // if (need_filiterate && sqrt(pow(pcl2cloud->points[i].x - enemy_pos[0], 2) + pow(pcl2cloud->points[i].y - enemy_pos[1], 2)) < 0.5)
+                // {
+                //     continue;
+                // }
                 if (pcl2cloud->points[i].y > 7.5 or pcl2cloud->points[i].y < -7.5)
                 {
                     continue;

@@ -44,7 +44,7 @@ void MapGenerate::cloudFilt()
 
     pcl::VoxelGrid<pcl::PointXYZ> sor_voxel;
     sor_voxel.setInputCloud (cloud);
-    sor_voxel.setLeafSize (0.02f, 0.02f, 0.02f);
+    sor_voxel.setLeafSize (0.01f, 0.01f, 0.01f);
     sor_voxel.filter (*cloud);
 
     pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;

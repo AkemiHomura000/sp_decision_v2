@@ -1,5 +1,5 @@
 #!/bin/bash
-sleep 5
+sleep 1
 source /opt/ros/noetic/setup.bash
 source /home/sentry/ws_livox/devel/setup.bash
 source /home/sentry/sp_nav_ws/devel/setup.bash
