@@ -5,13 +5,14 @@ namespace sp_decision
     {
         blackboard_ptr_ = blackboard_ptr;
         logger_ptr_ = logger_ptr;
-        chassis_ptr_ = std::make_shared<sp_decision::ChassisExecutor>(logger_ptr_);
+        chassis_ptr_ = std::make_shared<sp_decision::ChassisExecutor>(logger_ptr_,blackboard_ptr);
         gimbal_ptr_ = std::make_shared<sp_decision::GimbalExecutor>(logger_ptr_);
         yaml_reader_ptr_ = std::make_shared<tools::yaml_reader>(ros::package::getPath("sp_decision") + "/config/points.yaml");
         loop_rate = 20.0;
         last_decision_ = "null";
         points_init();
         decision_sub_ = nh_.subscribe("/sentry/decision", 10, &ControlNode::decision_sub, this);
+        enemy_pos_pub_ = nh_.advertise<geometry_msgs::Pose>("/need_filterate/enemy_pos", 10);
     }
     ControlNode::~ControlNode()
     {
@@ -85,4 +86,23 @@ namespace sp_decision
         }
         chassis_ptr_->cequence_move(points_1, wait_time_1, false);
     }
+    void ControlNode::enemy_filiter(int enemy_id)
+    {
+        if ((ros::Time::now() - blackboard_ptr_->enemy_status[enemy_id].pos_update_time).toSec() < 0.5)
+        {
+            geometry_msgs::Pose enemy_pos;
+            enemy_pos.position.x = blackboard_ptr_->enemy_status[enemy_id].robot_pos[0];
+            enemy_pos.position.y = blackboard_ptr_->enemy_status[enemy_id].robot_pos[1];
+            enemy_pos.position.z = 0.0;
+            enemy_pos.orientation.x = 0.0;
+            enemy_pos.orientation.y = 0.0;
+            enemy_pos_pub_.publish(enemy_pos);
+        }
+    }
+    // void ControlNode::pursuit(int enemy_id)
+    // {
+    //     switch (decision_status_)
+    //     {
+    //     }
+    // }
 }

@@ -1,14 +1,16 @@
 #include "executor/chassis.hpp"
 namespace sp_decision
 {
-    ChassisExecutor::ChassisExecutor(const tools::logger::Ptr &logger_ptr)
+    ChassisExecutor::ChassisExecutor(const tools::logger::Ptr &logger_ptr, const sp_decision::Blackboard::Ptr &blackboard_ptr)
     {
         logger_ptr_ = logger_ptr; // 获取日志器
+        blackboard_ptr_ = blackboard_ptr;
         set_goal_pub_ = nh_.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
         sentry_cmd_vel_pub_ = nh_.advertise<geometry_msgs::Twist>("/sentry/cmd_vel", 1);
         robot_state_pub_ = nh_.subscribe("robot_state", 10, &ChassisExecutor::robot_state_sub, this);
         rotate_state_pub_ = nh_.subscribe("rotate_state", 10, &ChassisExecutor::rotate_state_sub, this);
         cmd_vel_sub_ = nh_.subscribe("cmd_vel", 10, &ChassisExecutor::cmd_vel_callback, this);
+        enemy_pos_pub_ = nh_.advertise<geometry_msgs::Pose>("/need_filterate/enemy_pos", 10);
         rotate_state_ = RotateState::ROTATE;
         target_pose_.pose.position.x = 100;
         target_pose_.pose.position.y = 100; // 确保初值不会和第一个点冲突--------待优化
@@ -360,11 +362,11 @@ namespace sp_decision
             {
                 action_status_ = 1;
             }
-            else if(send_goal(alternate_point[0], alternate_point[1]) == 1)
+            else if (send_goal(alternate_point[0], alternate_point[1]) == 1)
             {
                 action_status_ = 3;
             }
-            else 
+            else
             {
                 rotate_inplace();
                 action_status_ = 5;
@@ -374,4 +376,23 @@ namespace sp_decision
             break;
         }
     }
+    void ChassisExecutor::pursuit(int enemy_id)
+    {
+        geometry_msgs::Pose enemy_poss;
+        enemy_poss.position.x = blackboard_ptr_->enemy_status[enemy_id].robot_pos[0];
+        enemy_poss.position.y = blackboard_ptr_->enemy_status[enemy_id].robot_pos[1];
+        double d = sqrt(pow(blackboard_ptr_->sentry_status.robot_pos[0] - blackboard_ptr_->enemy_status[enemy_id].robot_pos[0], 2) +
+                        pow(blackboard_ptr_->sentry_status.robot_pos[1] - blackboard_ptr_->enemy_status[enemy_id].robot_pos[1], 2));
+        if ((ros::Time::now().sec - blackboard_ptr_->enemy_status[enemy_id].pos_update_time.sec) < 0.5) // 0.5秒即超时
+        {
+            enemy_pos_pub_.publish(enemy_poss);
+            if (d < 1.5)
+            {
+                rotate_inplace();
+            }
+            else
+                send_goal(enemy_poss.position.x, enemy_poss.position.y);
+        }
+    }
+
 }

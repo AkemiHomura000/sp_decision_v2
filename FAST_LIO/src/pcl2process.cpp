@@ -262,6 +262,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <geometry_msgs/Pose.h>
 #include <image_transport/image_transport.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -285,7 +286,10 @@
 
 tf2_ros::Buffer tfBuffer;
 ros::Publisher pcl_publisher;
-
+ros::Subscriber enemy_pos_sub;
+Eigen::Vector2d enemy_pos;
+bool need_filiterate;
+ros::Time last_receive_time;
 inline float float_abs(float x)
 {
     if (x > 0)
@@ -343,6 +347,10 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
     }
     else
     {
+        if ((ros::Time::now().sec - last_receive_time.sec) < 0.3)
+            need_filiterate = true;
+        else
+            need_filiterate = false;
         ROS_INFO("points.size: %d", pcl2cloud->points.size());
         pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> ne;
         pcl::VoxelGrid<pcl::PointXYZ> filter;
@@ -375,13 +383,17 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
             float gradient = (pow(cloud_normals->points[i].normal_x, 2) + pow(cloud_normals->points[i].normal_y, 2)) / pow(cloud_normals->points[i].normal_z, 2);
             if (gradient > 0.7f)
             {
-                if (pcl2cloud->points[i].y > 6.6 or pcl2cloud->points[i].y < -6.6)
+                if (need_filiterate && sqrt(pow(pcl2cloud->points[i].x - enemy_pos[0], 2) + pow(pcl2cloud->points[i].y - enemy_pos[1], 2)) < 0.5)
+                {
+                    continue;
+                }
+                if (pcl2cloud->points[i].y > 7.5 or pcl2cloud->points[i].y < -7.5)
                 {
                     continue;
                 }
                 if (pow(pcl2cloud->points[i].x - current_x, 2) + pow(pcl2cloud->points[i].y - current_y, 2) > 0.09)
                 {
-                    //pcl2cloud->points[i].z = pcl2cloud->points[i].z;
+                    // pcl2cloud->points[i].z = pcl2cloud->points[i].z;
                     pcl2cloud_out->points.push_back(pcl2cloud->points[i]);
                     point_num = point_num + 1;
                 }
@@ -418,6 +430,22 @@ void getcloud_vec(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
     }
 }
 
+void enemy_pos_callback(const geometry_msgs::Pose::ConstPtr &enemy_pos_msg)
+{
+    geometry_msgs::TransformStamped map2body;
+    try
+    {
+        map2body = tfBuffer.lookupTransform("body", "map", ros::Time(0));
+    }
+    catch (tf2::TransformException &ex)
+    {
+        ROS_INFO("Pcl2process Get TF ERROR!");
+        return;
+    }
+    last_receive_time = ros::Time::now();
+    enemy_pos[0] = enemy_pos_msg->position.x;
+    enemy_pos[1] = enemy_pos_msg->position.y;
+}
 void getcloud(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
 { // 使用体素+梯度法进行点云分割
     std::vector<std::vector<int>> point_list1(2800);
@@ -640,6 +668,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "pointcloud_process");
     ros::NodeHandle pnh("~");
     tf2_ros::TransformListener tfListener(tfBuffer);
+    enemy_pos_sub = pnh.subscribe<geometry_msgs::Pose>("/need_filterate/enemy_pos", 1, enemy_pos_callback);
     auto subCloud = pnh.subscribe<sensor_msgs::PointCloud2>("/cloud_registered_body", 1, getcloud_vec);
     pcl_publisher = pnh.advertise<sensor_msgs::PointCloud2>("/pointcloud2_out", 1);
     ros::spin();

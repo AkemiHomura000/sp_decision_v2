@@ -26,8 +26,17 @@ namespace sp_decision
          *
          */
         void charge();
+        /**
+         * @brief 决策二：追踪。保持二到三米的距离，追踪超过5米原地停留
+         *
+         * @param enemy_id 追踪的敌方编号
+         */
+        Eigen::Vector2d init_pos;         // 开始追踪时的位置
+        void enemy_filiter(int enemy_id); // 过滤追踪目标周围的点云
+        void pursuit(int enemy_id);
 
     private:
+        int decision_status_; // 决策状态
         std::vector<Eigen::Vector2d> points_;
         bool control_thread_running;
         std::thread control_thread_;
@@ -35,10 +44,11 @@ namespace sp_decision
         std::string last_decision_; // 决策类别
         ros::NodeHandle nh_;
         ros::Subscriber decision_sub_;                  // 决策信息订阅
+        ros::Publisher enemy_pos_pub_;                  // 向点云处理程序发布
         int loop_rate;                                  // 状态维护频率
         sp_decision::ChassisExecutor::Ptr chassis_ptr_; // 底盘控制
         sp_decision::GimbalExecutor::Ptr gimbal_ptr_;   // 云台控制
-        sp_decision::Blackboard::Ptr blackboard_ptr_;   
+        sp_decision::Blackboard::Ptr blackboard_ptr_;
         tools::yaml_reader::Ptr yaml_reader_ptr_;
         tools::logger::Ptr logger_ptr_;
     };

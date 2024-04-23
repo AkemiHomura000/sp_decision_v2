@@ -23,6 +23,7 @@
 
 #include "robot_msg/CmdGimbal.h"
 #include "tools/log.hpp"
+#include "perception/blackboard.hpp"
 namespace sp_decision
 {
 
@@ -51,7 +52,7 @@ namespace sp_decision
             IDLE,
             ROTATE,
         };
-        ChassisExecutor(const tools::logger::Ptr &logger_ptr);
+        ChassisExecutor(const tools::logger::Ptr &logger_ptr, const sp_decision::Blackboard::Ptr &blackboard_ptr);
         int send_goal(double pos_x, double pos_y);           // 0为失败，1为进行中，2为成功到达
         void directly_send_goal(double pos_x, double pos_y); // 直接发布目标点
         void robot_state_sub(const robot_msg::RobotStateMsg &robot_state);
@@ -86,9 +87,14 @@ namespace sp_decision
          *
          * @param point 最终目标点
          * @param alternate_point 备用点
-
          */
         void single_point_move(Eigen::Vector2d point, Eigen::Vector2d alternate_point);
+        /**
+         * @brief 基本功能5，追踪
+         *
+         * @param enemy_id 敌方编号
+         */
+        void pursuit(int enemy_id);
 
     private:
         RobotState robot_state_;            // 导航模式
@@ -99,11 +105,13 @@ namespace sp_decision
         ros::Time last_judge_time_;         // 判断路径是否存在的计时器
         int nav_status_;                    // 导航状态
         tools::logger::Ptr logger_ptr_;
+        sp_decision::Blackboard::Ptr blackboard_ptr_;
         ros::NodeHandle nh_;
         ros::Publisher set_goal_pub_;       // 导航目标发布
         ros::Subscriber robot_state_pub_;   // 导航模式接收
         ros::Subscriber rotate_state_pub_;  // 小陀螺模式接收
         ros::Publisher sentry_cmd_vel_pub_; // 速度转发
+        ros::Publisher enemy_pos_pub_;      // 向雷达发送过滤信息
         ros::Subscriber cmd_vel_sub_;       // move_base速度规划器
         ros::Subscriber localization_sub_;  // 接受定位信息
         geometry_msgs::PoseStamped target_pose_;
