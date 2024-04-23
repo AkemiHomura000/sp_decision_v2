@@ -11,6 +11,7 @@ int main(int argc, char **argv)
 {
     setlocale(LC_CTYPE, "zh_CN.utf8");
     ros::init(argc, argv, "sp_decision_node");
+    ros::NodeHandle nh;
     tools::logger::Ptr logger = std::make_shared<tools::logger>();
     sp_decision::Blackboard::Ptr blackboard = std::make_shared<sp_decision::Blackboard>(logger);
     sp_decision::ChassisExecutor::Ptr chassis = std::make_shared<sp_decision::ChassisExecutor>(logger, blackboard);
@@ -22,6 +23,8 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(10);
     while(ros::ok)
     {
+        int id=nh.param("plan_id",10);
+        std::cout<<"id"<<id<<std::endl;
         Eigen::Vector2d point_1,point_2;
         point_1<<1,2;
         point_2<<0,0.5;

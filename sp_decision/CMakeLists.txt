@@ -86,6 +86,13 @@ target_link_libraries(map_matching
     ${OpenCV_LIBS}
     yaml-cpp)
   
+  
+add_executable(plan_select
+include/tools/plan_select.cpp)
+target_link_libraries(plan_select
+    ${catkin_LIBRARIES}
+    ${OpenCV_LIBS}
+    yaml-cpp)
 # add_executable(yaml_test
 # src/decision_node/yaml_read.cpp
 # )
