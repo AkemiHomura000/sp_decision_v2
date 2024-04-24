@@ -122,7 +122,12 @@ def global_localization(pose_estimation):
 
     # TODO 这里注意线程安全
     scan_tobe_mapped = copy.copy(cur_scan)
+    num_points=len(scan_tobe_mapped.points)
+    rospy.loginfo('num_points:{}'.format(num_points))
 
+    if num_points < 500:
+        rospy.logwarn("too few points in scan_tobe_mapped")
+        return
     tic = time.time()
 
     global_map_in_FOV = crop_global_map_in_FOV(global_map, pose_estimation, cur_odom)
