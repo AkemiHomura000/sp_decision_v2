@@ -5,10 +5,10 @@ namespace sp_decision
     {
         blackboard_ptr_ = blackboard_ptr;
         logger_ptr_ = logger_ptr;
-        chassis_ptr_ = std::make_shared<sp_decision::ChassisExecutor>(logger_ptr_,blackboard_ptr);
+        chassis_ptr_ = std::make_shared<sp_decision::ChassisExecutor>(logger_ptr_, blackboard_ptr);
         gimbal_ptr_ = std::make_shared<sp_decision::GimbalExecutor>(logger_ptr_);
         yaml_reader_ptr_ = std::make_shared<tools::yaml_reader>(ros::package::getPath("sp_decision") + "/config/points.yaml");
-        loop_rate = 20.0;
+        loop_rate = 50.0;
         last_decision_ = "null";
         points_init();
         decision_sub_ = nh_.subscribe("/sentry/decision", 10, &ControlNode::decision_sub, this);
@@ -43,35 +43,83 @@ namespace sp_decision
     void ControlNode::decision_sub(const robot_msg::DecisionMsg &msg)
     {
         decision_cbk_mutex.lock();
-        decision_ = msg.decision;
+        param_list_.clear();
+        std::string input = msg.decision;
+        std::istringstream iss(input);
+        std::string token;
+        int num = 0;
+        while (std::getline(iss, token, '-'))
+        {
+            if (num == 0)
+                decision_ = token;
+            else
+                param_list_.push_back(std::stod(token));
+            num++;
+        }
+        decision_type_ = msg.type;
+
+        if (decision_type_ == 1 && last_decision_ != decision_) // 普通动作直接执行，不经过状态机
+        {
+            chassis_ptr_->action_status_ = 0;
+            last_decision_ = decision_;
+        }
+        execute_decision();
         decision_cbk_mutex.unlock();
     }
     void ControlNode::execute_decision()
     {
+        std::stringstream log_msg;
+        log_msg << "decision: " << decision_;
+        for (int i = 0; i < param_list_.size(); i++)
+            log_msg << "-" << param_list_[i];
+        logger_ptr_->logInfo(log_msg);
+
+        ROS_INFO("decision: %s", decision_.c_str());
         if (decision_ == "null")
             return;
-        else if (decision_ == "charge")
-            charge();
-    }
-    void ControlNode::run()
-    {
-        ros::Rate rate(loop_rate);
-        while (ros::ok() && control_thread_running)
+        else if (decision_ == "observe")
+            gimbal_ptr_->gimbal_set(-param_list_[1], param_list_[0], true);
+        else if (decision_ == "rotate")
         {
-            if (last_decision_ != decision_)
-            {
-                chassis_ptr_->action_status_ = 0;
-                last_decision_ = decision_;
-            }
-            execute_decision();
-            rate.sleep();
+            if (param_list_[0] == 0)
+                chassis_ptr_->rotate_state_ = ChassisExecutor::RotateState::IDLE;
+            if (param_list_[0] == 1)
+                chassis_ptr_->rotate_state_ = ChassisExecutor::RotateState::UPSLOPW;
+            if (param_list_[0] == 2)
+                chassis_ptr_->rotate_state_ = ChassisExecutor::RotateState::ROTATE;
+        }
+        else if (decision_ == "revive") // todo 增加复活指令
+        {
+            if (param_list_[0] == 0)
+                ;
+            if (param_list_[0] == 1)
+                ;
+            if (param_list_[0] == 2)
+                ;
+        }
+        else if (decision_ == "remote_addblood") // todo 增加回血指令
+        {
         }
     }
-    void ControlNode::run_start()
-    {
-        control_thread_running = true;
-        control_thread_ = std::thread(&ControlNode::run, this);
-    }
+    // void ControlNode::run()
+    // {
+    //     ros::Rate rate(loop_rate);
+    //     while (ros::ok() && control_thread_running)
+    //     {
+    //         if (decision_type_ == 1 && last_decision_ != decision_) // 普通动作直接执行，不经过状态机
+    //         {
+    //             chassis_ptr_->action_status_ = 0;
+    //             last_decision_ = decision_;
+    //         }
+    //         execute_decision();
+    //         rate.sleep();
+    //     }
+    // }
+    // void ControlNode::run_start()
+    // {
+    //     control_thread_running = true;
+    //     control_thread_ = std::thread(&ControlNode::run, this);
+    // }
     void ControlNode::charge()
     {
         std::vector<Eigen::Vector2d> points_1;

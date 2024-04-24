@@ -50,6 +50,7 @@ namespace sp_decision
         enum RotateState
         {
             IDLE,
+            UPSLOPW,
             ROTATE,
         };
         ChassisExecutor(const tools::logger::Ptr &logger_ptr, const sp_decision::Blackboard::Ptr &blackboard_ptr);
@@ -73,6 +74,7 @@ namespace sp_decision
          * @brief 基本动作2，原地小陀螺
          */
         void rotate_inplace();
+        RotateState rotate_state_; // 小陀螺模式
         /**
          * @brief 基本功能3，序列点导航：依次通过每个目标点，当被阻挡时原地停留
          *
@@ -97,8 +99,8 @@ namespace sp_decision
         void pursuit(int enemy_id);
 
     private:
-        RobotState robot_state_;            // 导航模式
-        RotateState rotate_state_;          // 小陀螺模式
+        RobotState robot_state_; // 导航模式
+
         geometry_msgs::Twist cmd_vel_;      // move_base规划的速度
         geometry_msgs::Twist last_cmd_vel_; // move_base规划的速度
         nav_msgs::Odometry localization_;   // 定位信息

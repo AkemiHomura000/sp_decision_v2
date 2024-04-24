@@ -33,13 +33,14 @@ namespace sp_decision
     decision_tree::decision_tree(const sp_decision::Blackboard::Ptr &blackboard_ptr)
     {
         decision_pub =
-            nh_.advertise<robot_msg::EnemyStage>("/sentry/decision", 1);
+            nh_.advertise<robot_msg::DecisionMsg>("/sentry/decision", 1);
         last_time = std::chrono::system_clock::now();
         a = 2;
         b = 3;
         c = 0;
         num = 0;
-        yaml_reader_ptr_ = std::make_shared<tools::yaml_reader>(ros::package::getPath("sp_decision") + "/config/test.yaml");;
+        yaml_reader_ptr_ = std::make_shared<tools::yaml_reader>(ros::package::getPath("sp_decision") + "/config/test.yaml");
+        ;
         blackboard_ptr_ = blackboard_ptr;
         node_ptr_init(); // 生成决策图
     }
@@ -83,8 +84,12 @@ namespace sp_decision
                 std::string action = node["action"].as<std::string>();
                 if (action != "") // 动作节点
                 {
+                    size_t pos = action.find_first_of("0123456789");
+                    int type = std::stoi(action.substr(pos,1));
+                    std::string remainingString = action.substr(pos+1);
                     dt_node.decision_pub = &decision_pub;
-                    dt_node.decision_msg.decision = action;
+                    dt_node.decision_msg.decision = remainingString;
+                    dt_node.decision_msg.type = type;
                     dt_node.compare_function = compare_0;
                     dt_node.variable_ptr = &blackboard_ptr_->match_progress;
                     dt_node.condition_value = 0;
@@ -169,11 +174,11 @@ namespace sp_decision
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(50)); // 间隔50ms
             num++;
-            std::cout << "num:" << num << std::endl;
-            auto now = std::chrono::system_clock::now();
-            std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_time);
-            std::cout << "delat-time" << duration.count() << std::endl;
-            last_time = std::chrono::system_clock::now();
+             std::cout << "num:" << num << std::endl;
+            // auto now = std::chrono::system_clock::now();
+            // std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_time);
+            // std::cout << "delat-time" << duration.count() << std::endl;
+            // last_time = std::chrono::system_clock::now();
         }
         if (node->compare(*node->variable_ptr, node->condition_value))
         {

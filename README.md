@@ -59,3 +59,32 @@ ROS    >= Melodic. [ROS Installation](http://wiki.ros.org/ROS/Installation)
 
 ## 3.3 2023赛季Rosbag
 [哨兵建图10分钟Rosbag](https://tj-superpower.feishu.cn/file/L1oybir3dogzCBx3pPfc247tnWc)
+
+
+## 3.4 2024策略类别 ##
+
+### 3.4.1 单次动作（action以0以外的数字开头）
+1.云台控制：observe-左侧角度-右侧角度 (0-180)
+    eg：observe-20-80
+
+2.小陀螺策略控制：rotate-模式 (0：无旋转，1：慢速上坡，2：正常小陀螺)
+    eg：rotate-1
+
+3.复活状态控制：revive-模式 (0：不复活，1：读条等待复活，2：氪金立即复活)
+    eg：revive-0
+
+4.远程回血控制：remote_addblood
+    eg：remote_addblood
+
+### 3.4.2 连续动作（action以1开头）
+1.返回补给点回血
+
+2.基地增益区和巡逻区往返
+
+3.辅助英雄推前哨站
+
+4.返回补给点解锁发射机构
+
+### 3.4.3 可用变量
+1.match_progress 0-1-2(0：未开始，1：进行中，2：已结束)
+2.match_remainder 

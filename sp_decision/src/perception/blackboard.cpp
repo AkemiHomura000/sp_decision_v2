@@ -300,7 +300,7 @@ namespace sp_decision
     void Blackboard::enemy_status_advertise()
     {
         std::stringstream ss; // 向自瞄发送无敌目标
-        ss << "0";
+        ss << "filiterate_enemy:0";
         for (int i = 0; i < 6; i++)
         {
             if (enemy_status[i].robot_status == ROBOT_STATUS::revive_10s || enemy_status[i].robot_status == ROBOT_STATUS::revive_3s)

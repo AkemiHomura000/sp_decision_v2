@@ -40,8 +40,10 @@ namespace sp_decision
         std::vector<Eigen::Vector2d> points_;
         bool control_thread_running;
         std::thread control_thread_;
-        std::string decision_;      // 决策类别
-        std::string last_decision_; // 决策类别
+        std::string decision_;           // 决策类别
+        std::vector<double> param_list_; // 决策参数表
+        int decision_type_;              // 为1时需要重置状态机
+        std::string last_decision_;      // 决策类别
         ros::NodeHandle nh_;
         ros::Subscriber decision_sub_;                  // 决策信息订阅
         ros::Publisher enemy_pos_pub_;                  // 向点云处理程序发布

@@ -40,22 +40,22 @@ namespace sp_decision
         case RobotState::SLOW:
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 0.4);
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 0.4);
-            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 3.0) * static_cast<int>(rotate_state_);
             break;
         case RobotState::MOVE:
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 1.0);
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x, 1.0);
-            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 3.0) * static_cast<int>(rotate_state_);
             break;
         case RobotState::FAST:
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x * 2, 3.0);
             sentry_cmd_vel.linear.x = std::min(cmd_vel_.linear.x * 2, 3.0);
-            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 3.0) * static_cast<int>(rotate_state_);
             break;
         case RobotState::STOP:
             sentry_cmd_vel.linear.x = 0;
             sentry_cmd_vel.linear.x = 0;
-            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 10.0) * static_cast<int>(rotate_state_);
+            sentry_cmd_vel.angular.z = std::min(cmd_vel_.angular.z, 3.0) * static_cast<int>(rotate_state_);
             break;
         default:
             break;
