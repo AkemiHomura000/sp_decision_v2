@@ -16,6 +16,8 @@ namespace sp_decision
             nh_.subscribe("localization", 1, &Blackboard::sentry_pose_callback, this);
         enemy_pos_sub_ =
             nh_.subscribe("/enemy_pose", 1, &Blackboard::enemy_pose_callback, this);
+        decision_sub_ =
+            nh_.subscribe("/sentry/decision", 10, &Blackboard::decision_sub, this);
         enemy_status_pub_ =
             nh_.advertise<robot_msg::EnemyStage>("/enemy_stage", 1);
         log_pub_ =
@@ -36,7 +38,18 @@ namespace sp_decision
     //     }
     //     goal_status_mutex.unlock();
     // }
-
+    void Blackboard::decision_sub(const robot_msg::DecisionMsg &decision)
+    {
+        if (decision.type == 0)
+        {
+            std::string input = decision.decision;
+            std::istringstream iss(input);
+            std::string token;
+            std::getline(iss, token, '-');
+            std::getline(iss, token, '-');
+            action_symbol = std::stod(token);
+        }
+    }
     void Blackboard::referee_info_callback(const robot_msg::RefereeInfoMsg::ConstPtr &msg)
     {
         referee_info_mutex.lock();
@@ -60,17 +73,18 @@ namespace sp_decision
             game_status = MatchSatuts::AT_MATCH;
             match_progress = 1;
         }
-        //检测云台手标点和key，会持续修改1s，防止没检测到
-        if (msg->target_x != 0 || msg->target_y != 0 || msg->key != 0) 
+        // 检测云台手标点和key，会持续修改1s，防止没检测到
+        if (msg->target_x != 0 || msg->target_y != 0 || msg->key != 0)
             time_received_target_ = ros::Time::now();
-        if ((time_received_target_.sec - ros::Time::now().sec) < 1)
+        if ((ros::Time::now().sec - time_received_target_.sec) < 1)
         {
             if (msg->target_x != 0 || msg->target_y != 0 || msg->key != 0)
             {
                 target[0] = msg->target_x;
                 target[1] = msg->target_y;
+                if (msg->target_x != 0 || msg->target_y != 0)
+                    target_update = 1;
                 key_from_char = msg->key;
-                
             }
         }
         else
@@ -78,8 +92,9 @@ namespace sp_decision
             target[0] = 0;
             target[1] = 0;
             key_from_char = 0;
+            target_update = 0;
         }
-        //spdlog::info("target_x:{} \ttarget_y:{} \tkey:{} ", target[0], target[1], key_from_char);
+        // spdlog::info("target_x:{} \ttarget_y:{} \tkey:{} ", target[0], target[1], key_from_char);
 
         // // 更新基地受击状态?
         // if (base_HP_ > msg->base_HP || base_attacked_)
@@ -194,6 +209,7 @@ namespace sp_decision
         team_hp[4] = static_cast<double>(msg->Infantry_5_HP);
         team_status[5].robot_hp = msg->Sentry_HP;
         team_hp[5] = static_cast<double>(msg->Sentry_HP);
+        sentry_status.sentry_hp = team_hp[5];
         team_status[6].robot_hp = msg->OutPose_HP;
         team_hp[6] = static_cast<double>(msg->OutPose_HP);
         team_status[7].robot_hp = msg->Base_HP;

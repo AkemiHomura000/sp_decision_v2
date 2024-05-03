@@ -14,6 +14,7 @@ namespace sp_decision
     public:
         typedef std::shared_ptr<ControlNode> Ptr;
         std::mutex decision_cbk_mutex;
+        int decision_status_;  // 决策动作状态
         ControlNode(const Blackboard::Ptr &blackboard_ptr, const tools::logger::Ptr &logger_ptr);
         ~ControlNode();
         void decision_sub(const robot_msg::DecisionMsg &decision);
@@ -34,10 +35,19 @@ namespace sp_decision
         Eigen::Vector2d init_pos;         // 开始追踪时的位置
         void enemy_filiter(int enemy_id); // 过滤追踪目标周围的点云
         void pursuit(int enemy_id);
+        /**
+         * @brief 决策三：返回补给点回血
+         * 在决策树里设置状态位控制退出和进入
+         */
+        void add_blood();
+        /**
+         * @brief 决策四：返回启动区
+         * decision_status_==3为到达
+         */
+        void reach_start_region();
 
     private:
-        int decision_status_; // 决策状态
-        std::vector<Eigen::Vector2d> points_;
+        std::vector<Eigen::Vector2d> points_; // 读取点集列表
         bool control_thread_running;
         std::thread control_thread_;
         std::string decision_;           // 决策类别

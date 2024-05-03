@@ -67,7 +67,7 @@ namespace sp_decision
          * action_status_定义：0为未初始化，1为搜寻可行点，2为前往目标区域，3为成功，4为长时间无法找到可行点
          * @todo 超时后关闭动态避障
          */
-        void range_move(std::vector<Eigen::Vector2d> points);
+        int range_move(std::vector<Eigen::Vector2d> points);
         Eigen::Vector2d last_target;                                         // 记录上次目标点
         Eigen::Vector2d point_generate(std::vector<Eigen::Vector2d> points); // 随机点生成器
         /**

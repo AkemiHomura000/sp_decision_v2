@@ -63,7 +63,7 @@ ROS    >= Melodic. [ROS Installation](http://wiki.ros.org/ROS/Installation)
 
 ## 3.4 2024策略类别 ##
 
-### 3.4.1 单次动作（action以0以外的数字开头）
+### 3.4.1 单次动作（action以0,1以外的数字开头）
 1.云台控制：observe-左侧角度-右侧角度 (0-180)
     eg：observe-20-80
 
@@ -76,11 +76,15 @@ ROS    >= Melodic. [ROS Installation](http://wiki.ros.org/ROS/Installation)
 4.远程回血控制：remote_addblood
     eg：remote_addblood
 
+5.设置动作状态位：symbol-状态位 (action以0开头)!!!!!!!!!!!!!!!!!!!!!
+    eg：symbol-1
+
 ### 3.4.2 连续动作（action以1开头）
-1.返回补给点回血
+1.返回补给点回血:add_blood
+    使用点位1（补给区），2（待命区）
 
 2.基地增益区和巡逻区往返
-
+    使用点位3，4，5，6
 3.辅助英雄推前哨站
 
 4.返回补给点解锁发射机构
@@ -88,3 +92,9 @@ ROS    >= Melodic. [ROS Installation](http://wiki.ros.org/ROS/Installation)
 ### 3.4.3 可用变量
 1.match_progress 0-1-2(0：未开始，1：进行中，2：已结束)
 2.match_remainder 
+3.sentry_hp
+4.key (云台手发布)
+5.target_update (云台手发布坐标后为1)
+6.symbol (动作状态位)
+### 3.4.4 动作状态位
+利用状态位控制并发动作或延续动作,action_symbol初始化为0

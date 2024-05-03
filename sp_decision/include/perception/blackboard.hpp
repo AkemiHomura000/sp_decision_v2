@@ -25,7 +25,7 @@
 #include <robot_msg/EnemyStage.h>
 #include <robot_msg/RefereeInfoMsg.h>
 #include <robot_msg/Armor.h>
-
+#include <robot_msg/DecisionMsg.h>
 #include <tools/log.hpp>
 namespace sp_decision
 {
@@ -53,10 +53,11 @@ namespace sp_decision
         double team_hp[8] = {};      // 友方血量，编号依次为英雄、工程、三步兵、哨兵、前哨站、基地
         double match_remainder = -1; // 比赛剩余时间
         double match_progress = 0;   // 比赛进程,0为准备，1为进行中，2为结束
-
-        // 云台手发布坐标、key,保存1s，防止检查频率过低导致漏过消息
-        double target[2] = {0, 0};
+        double target[2] = {0, 0};   // 云台手发布坐标、key,保存1s，防止检查频率过低导致漏过消息
+        double target_update;        //(云台手发布坐标后为1)
         double key_from_char;
+        double action_symbol = 0; // 供决策树进行判断
+
         ros::Time time_received_target_;
         /**
          * @brief 机器人状态结构体
@@ -102,7 +103,7 @@ namespace sp_decision
         // 自身状态,便于调用,TODO:导航状态
         struct sentry_status
         {
-            int sentry_hp;                 // 机器人血量
+            double sentry_hp;              // 机器人血量
             nav_msgs::Odometry robot_pose; // 机器人位置
             Eigen::Vector2d robot_pos;     // 机器人位置
         };
@@ -171,6 +172,7 @@ namespace sp_decision
         ros::Subscriber enemy_pos_sub_; // 接收敌方坐标
         ros::Subscriber team_hp_sub_;   // 接收队友血量
         ros::Publisher enemy_status_pub_;
+        ros::Subscriber decision_sub_;
 
         ros::Subscriber referee_data_sub_;
         ros::Subscriber move_base_status_sub_;
@@ -185,6 +187,7 @@ namespace sp_decision
         void team_hp_callback(const robot_msg::RobotHP::ConstPtr &msg);
         void sentry_pose_callback(const nav_msgs::Odometry::ConstPtr msg);
         void enemy_pose_callback(const robot_msg::Armor::ConstPtr &msg);
+        void decision_sub(const robot_msg::DecisionMsg &decision);
     };
 } // namespace sp_decision
 #endif

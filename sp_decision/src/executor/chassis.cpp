@@ -142,7 +142,7 @@ namespace sp_decision
         set_goal_pub_.publish(goal_);
     }
     // 基本动作1——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    void ChassisExecutor::range_move(std::vector<Eigen::Vector2d> points)
+    int ChassisExecutor::range_move(std::vector<Eigen::Vector2d> points)
     {
         Eigen::Vector2d target;
         int result;

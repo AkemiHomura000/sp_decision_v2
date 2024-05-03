@@ -22,7 +22,7 @@ decision_tree_1:
     condition: ""
     left_id: 6
     right_id: -1
-    action: 0rotate-0
+    action: 0symbol-1
   - id: 5
     variable: ""
     condition: ""

@@ -85,8 +85,8 @@ namespace sp_decision
                 if (action != "") // 动作节点
                 {
                     size_t pos = action.find_first_of("0123456789");
-                    int type = std::stoi(action.substr(pos,1));
-                    std::string remainingString = action.substr(pos+1);
+                    int type = std::stoi(action.substr(pos, 1));
+                    std::string remainingString = action.substr(pos + 1);
                     dt_node.decision_pub = &decision_pub;
                     dt_node.decision_msg.decision = remainingString;
                     dt_node.decision_msg.type = type;
@@ -122,6 +122,10 @@ namespace sp_decision
                     value = std::stod(condition.substr(pos));
                     dt_node.condition_value = value;
                     // 获取变量名
+                    if (variable == "symbol")
+                    {
+                        dt_node.variable_ptr = &blackboard_ptr_->action_symbol;
+                    }
                     if (variable == "match_progress")
                     {
                         dt_node.variable_ptr = &blackboard_ptr_->match_progress;
@@ -130,9 +134,17 @@ namespace sp_decision
                     {
                         dt_node.variable_ptr = &blackboard_ptr_->match_remainder;
                     }
-                    if (variable == "enemy_hp[0]")
+                    if (variable == "sentry_hp")
                     {
-                        dt_node.variable_ptr = &blackboard_ptr_->enemy_hp[0];
+                        dt_node.variable_ptr = &blackboard_ptr_->sentry_status.sentry_hp;
+                    }
+                    if (variable == "key")
+                    {
+                        dt_node.variable_ptr = &blackboard_ptr_->key_from_char;
+                    }
+                    if (variable == "target_update")
+                    {
+                        dt_node.variable_ptr = &blackboard_ptr_->target_update;
                     }
                 }
                 nodes_id_vector.push_back(dt_node.id);
@@ -174,7 +186,7 @@ namespace sp_decision
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(50)); // 间隔50ms
             num++;
-             std::cout << "num:" << num << std::endl;
+            //std::cout << "num:" << num << std::endl;
             // auto now = std::chrono::system_clock::now();
             // std::chrono::milliseconds duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_time);
             // std::cout << "delat-time" << duration.count() << std::endl;
@@ -184,7 +196,7 @@ namespace sp_decision
         {
             if (node->left->id != 1)
             {
-                std::cout << "judge_true\t" << node->id << std::endl;
+                //std::cout << "judge_true\t" << node->id << std::endl;
                 // std::cout << "variable\t" << *node->variable_ptr << std::endl;
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
@@ -195,7 +207,7 @@ namespace sp_decision
                 node->compare(*node->variable_ptr, node->condition_value);
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
-                std::cout << "judge_true\t" << node->id << std::endl;
+                //std::cout << "judge_true\t" << node->id << std::endl;
                 // std::cout << "variable\t" << *node->variable_ptr << std::endl;
             }
         }
@@ -203,7 +215,7 @@ namespace sp_decision
         {
             if (node->right->id != 1)
             {
-                std::cout << "judge_false\t" << node->id << std::endl;
+                //std::cout << "judge_false\t" << node->id << std::endl;
                 // std::cout << "variable\t" << *node->variable_ptr << std::endl;
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
@@ -214,7 +226,7 @@ namespace sp_decision
                 node->compare(*node->variable_ptr, node->condition_value);
                 if (node->decision_msg.decision != "")
                     node->pub_decision();
-                std::cout << "judge_true\t" << node->id << std::endl;
+                //std::cout << "judge_true\t" << node->id << std::endl;
                 // std::cout << "variable\t" << *node->variable_ptr << std::endl;
             }
         }

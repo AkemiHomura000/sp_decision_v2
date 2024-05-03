@@ -147,10 +147,18 @@ namespace sp_decision
             enemy_pos_pub_.publish(enemy_pos);
         }
     }
-    // void ControlNode::pursuit(int enemy_id)
-    // {
-    //     switch (decision_status_)
-    //     {
-    //     }
-    // }
+    void ControlNode::pursuit(int enemy_id)
+    {
+    }
+    void ControlNode::add_blood()
+    {
+        chassis_ptr_->single_point_move(points_[0], points_[1]);
+    }
+    void ControlNode::reach_start_region()
+    {
+        std::vector<Eigen::Vector2d> points_1;
+        for (int i = 2; i < 6; i++)
+            points_1.push_back(points_[i]);
+        decision_ = chassis_ptr_->range_move(points_1);
+    }
 }
